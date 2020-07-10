@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+set -e -o pipefail
+
+base=$(cd "$(dirname "$0")" && pwd -P)
+
+cd "$base"
+. ./activate -q
+
+pytest -q "$@"
+
+echo OK

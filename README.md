@@ -1,9 +1,22 @@
-## User Roles
+REST API for Spring Voice
+=========================
+
+REST API for Spring Voice projects. Provides a single endpoint on which to build frontend applications without directly accommodating a specific backend.
+
+
+System Requirements
+-------------------
+
+- Python 3.7
+
+User Roles
+----------
 
 Mobile App / "Anonymous" User (Device)
--- Admin User
+Admin User
 
-## API Routes
+API Routes
+----------
 
 ```
 GET /api/v1/submissions
@@ -57,7 +70,8 @@ POST /api/v1/users
 
 ```
 
-## Authentication
+Authentication
+--------------
 
 - Mobile App User
   - Generate a random key / token at the device level?
@@ -68,7 +82,8 @@ POST /api/v1/users
   - The API generates an *administrative* <TokenValue>
   - Passes token via header `Authorization: Bearer <TokenValue>`
 
-## Internal Resources
+Internal Resources
+------------------
 
 - Database table for Submissions
 - Image storage location

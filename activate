@@ -1,0 +1,36 @@
+[ -n "$BASH_SOURCE" ] \
+    || { echo 1>&2 "source (.) this with Bash"; exit 2; }
+
+__quiet=
+[[ ${1-} = -q ]] && { shift; __quiet=-q; }
+
+(
+    die() { echo 1>&2 -e "$(basename "$0"):" "$@"; exit 1; }
+
+    base=$(cd "$(dirname "$BASH_SOURCE")" && pwd -P)
+    build="$base/.build"
+
+    cd "$base"
+
+    [ -d venv ] || {
+        echo 'Checking system requirements'
+        py='python3'; $py --version >/dev/null 2>&1 \
+            || die "Python 3.7 or higher is required to run this application"
+        py_version=$($py -c 'import sys; print(
+            sys.version_info.major > 2 and sys.version_info.minor > 6
+        )')
+        [[ $py_version = 'True' ]] \
+            || die "Python 3.7 or higher is required to run this application"
+        $py -m pip --version >/dev/null 2>&1 \
+            || die "PIP is required to run this application"
+
+        echo 'Building virtual environment'
+        PYTHONPATH="$base/venv/bin/python3"
+        $py -s -m venv venv \
+        && . ./venv/bin/activate \
+        && $py -m pip install $__quiet -r requirements.txt \
+        && $py -m pip install $__quiet -r requirements-dev.txt
+    }
+) \
+&& . "$(dirname "$BASH_SOURCE")"/venv/bin/activate \
+&& export PYTHONPATH="$(dirname "$BASH_SOURCE")/lib"
