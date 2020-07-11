@@ -7,5 +7,10 @@ cd "$base"
 . ./activate -q
 
 pytest -q "$@"
+echo -e "\r"
 
-echo OK
+flake=$(flake8 --exit-zero --exclude=__pycache__,venv)
+[[ -z $flake ]] && echo -e 'Style checks pass\n' \
+  || { echo -e "Style check errors:\n$flake"; exit 1; }
+
+echo All tests pass

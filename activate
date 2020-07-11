@@ -2,7 +2,7 @@
     || { echo 1>&2 "source (.) this with Bash"; exit 2; }
 
 __quiet=
-[[ ${1-} = -q ]] && { shift; __quiet=-q; }
+[[ ${1-} = -q ]] && { shift; __quiet="-q --disable-pip-version-check"; }
 
 (
     die() { echo 1>&2 -e "$(basename "$0"):" "$@"; exit 1; }
