@@ -1,6 +1,6 @@
 import contextlib
 
-from app import app
+from app.routes.healthcheck import app
 
 
 @contextlib.contextmanager
