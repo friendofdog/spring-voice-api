@@ -6,7 +6,7 @@ test:
 	pytest -q
 
 lint:
-	flake8 tests/ app/
+	flake8 tests/ springapi/
 
 type-check:
-	mypy tests/**/*.py tests/*.py app/**/*.py
+	mypy tests/**/*.py tests/*.py springapi/*.py springapi/**/*.py

@@ -1,4 +1,5 @@
-from app.routes import healthcheck
+from springapi.app import create_app
 
 if __name__ == '__main__':
-    healthcheck.app.run()
+    app = create_app()
+    app.run()
