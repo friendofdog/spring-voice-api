@@ -9,4 +9,6 @@ class TestHealthCheckHandler(unittest.TestCase):
             response = client.get("/api/v1/healthcheck")
             self.assertEqual("200 OK", response.status)
             json = response.get_json()
+            self.assertEqual(
+                "application/json", response.headers["Content-type"])
             self.assertEqual({"success": True}, json)
