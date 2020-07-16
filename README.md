@@ -7,13 +7,37 @@ REST API for Spring Voice projects. Provides a single endpoint on which to build
 System Requirements
 -------------------
 
-- Python 3.7
+- Python 3.7+
 
-User Roles
-----------
+Using this Application
+----------------------
 
-Mobile App / "Anonymous" User (Device)
-Admin User
+### Setup
+
+1. Optional: Set up and activate virtual environment, or packages will install globally
+2. `pip install -r dependencies.py`
+3. `pip install -r dependencies-dev.py`
+
+### Starting up the app
+
+`python3 run.py` will start the app in production mode. Appending `--env=dev` will start it in development mode; `--env=test` will start it in testing mode.
+
+### Testing
+
+Tests are done in unittest and are initiated by pytest. They can be run using `make test`. `make` will run tests, plus linting and type checking.
+
+User Roles and Authentication
+-----------------------------
+
+There are two user roles:
+
+1. Admin user
+
+    These are users who have administrative rights to edit / manage / delete submissions through the [web app](https://gitlab.com/SIVENTH/spring-voice-mobile). They log in throughh the application UI, which generates an `*administrative* <TokenValue>`, which is passed via header `Authorization: Bearer <TokenValue>` to the API.
+
+2. Mobile app / "anonymous" user
+
+    This is anyone other than admin users, who are accessing [the app on mobile devices](https://gitlab.com/SIVENTH/spring-voice-mobile). As of the time of writing (2020-07-16), it was decided that these users would not have a perpetual identity (at least for MVP). They make submissions using the mobile app, but there is nothing linking the user to the submission he just made. Future implementations might involve authentication using a token on user's device.
 
 API Routes
 ----------
@@ -69,18 +93,6 @@ POST /api/v1/users
 }
 
 ```
-
-Authentication
---------------
-
-- Mobile App User
-  - Generate a random key / token at the device level?
-  - Request a random key / token from the API
-  - Passes token via header `Authorization: Bearer <TokenValue>`
-- Admin App User
-  - Login via an application UI
-  - The API generates an *administrative* <TokenValue>
-  - Passes token via header `Authorization: Bearer <TokenValue>`
 
 Internal Resources
 ------------------
