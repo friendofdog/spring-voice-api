@@ -5,6 +5,7 @@ import argparse
 
 from springapi.helpers import register
 from springapi.routes.healthcheck import healthcheck
+from springapi.routes.submissions import get_submissions
 
 
 def get_env_name():
@@ -28,4 +29,5 @@ def create_app():
     app = Flask(__name__)
     app.config.from_object(getattr(config_file, env))
     register(app, healthcheck)
+    register(app, get_submissions)
     return app
