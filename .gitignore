@@ -1,3 +1,4 @@
-/venv/
 /.pytest_cache/
 /.mypy_cache/
+/models/firebase/credentials*
+/models/firebase/config.py
