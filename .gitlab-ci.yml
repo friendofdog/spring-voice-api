@@ -1,0 +1,25 @@
+image: python:3.7
+
+stages:
+  - test
+
+run_tests:
+  stage: test
+  script:
+    - python3 -m pip install -r requirements.txt
+    - python3 -m pip install -r requirements-dev.txt
+    - make test
+
+run_linter:
+  stage: test
+  script:
+    - python3 -m pip install -r requirements.txt
+    - python3 -m pip install -r requirements-dev.txt
+    - make lint
+
+run_type_check:
+  stage: test
+  script:
+    - python3 -m pip install -r requirements.txt
+    - python3 -m pip install -r requirements-dev.txt
+    - make type-check
