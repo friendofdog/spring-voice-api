@@ -1,19 +1,16 @@
+import urllib.parse
 from firebase_admin import storage  # type: ignore
 
 
-def get_images():
+def get_image(blob_name, img_dir):
     bucket = storage.bucket()
-    blobs = bucket.list_blobs()
-    return blobs
-
-
-def get_image(blob_name):
-    bucket = storage.bucket()
-    blob = bucket.blob(f'submissions/{blob_name}')
+    base_url = 'https://firebasestorage.googleapis.com/v0/b/'
+    full_name = f"{f'{img_dir}%2F' if img_dir else ''}{blob_name}"
+    blob = bucket.blob(urllib.parse.unquote(full_name))
     if blob.exists():
         image = {
             'public_url':
-                f'https://firebasestorage.googleapis.com/v0/b/{blob.bucket.name}/o/submissions%2F{blob.name}?alt=media',
+                f"{base_url}{blob.bucket.name}/o/{full_name}?alt=media",
             'name': blob.name,
             'meta': blob.metadata
         }

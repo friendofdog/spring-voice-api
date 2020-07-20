@@ -10,7 +10,7 @@ def get_submissions():
     submissions = []
     for doc in documents:
         submission = doc.to_dict()
-        submission.update(get_image(doc.id))
+        submission.update(get_image(doc.id, 'submissions'))
         submission.update(id=doc.id)
         submissions.append(submission)
     return jsonify(submissions), 200
