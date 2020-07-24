@@ -7,9 +7,9 @@ from springapi.routes.healthcheck import healthcheck
 from springapi.routes.submissions import get_submissions
 
 
-def create_app(env):
+def create_app(configuration):
     app = Flask(__name__)
-    app.config.from_object(getattr(config_file, env))
+    # app.config.from_object(getattr(config_file, env))
     register(app, healthcheck)
     register(app, get_submissions)
     return app

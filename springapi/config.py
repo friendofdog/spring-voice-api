@@ -1,3 +1,10 @@
+class Configuration(object):
+
+    def __init__(self, firebase):
+        self.firebase = firebase
+
+
+"""
 class Config(object):
     DEBUG = False
     ENV = 'production'
@@ -15,3 +22,4 @@ class DevelopmentConfig(Config):
 
 class TestingConfig(Config):
     TESTING = True
+"""
