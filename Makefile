@@ -2,6 +2,8 @@
 
 all: test lint type-check
 
+export FLASK_ENV := testing
+
 test:
 	pytest -q
 

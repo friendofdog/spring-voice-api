@@ -1,7 +1,6 @@
 import unittest
 
 from tests.springapi.helpers import make_test_client
-from springapi.config import Configuration
 
 
 class MockFirebase(object):
@@ -31,7 +30,6 @@ class TestSubmissionsRoute(unittest.TestCase):
         mock_firebase = MockFirebase()
         mock_submission = {"name": "Foo Bar", "message": "foobar"}
         mock_firebase.add_submission(mock_submission)
-        config = Configuration(firebase=mock_firebase)
 
         with make_test_client(config) as client:
             response = client.get("/api/v1/submissions")
