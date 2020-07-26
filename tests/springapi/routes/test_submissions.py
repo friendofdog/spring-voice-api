@@ -10,6 +10,7 @@ class MockFirebase(object):
 
     def add_submission(self, submission):
         self._submissions.append(submission)
+        return submission
 
     def get_submissions(self):
         return self._submissions
@@ -44,3 +45,17 @@ class TestSubmissionsRoute(unittest.TestCase):
             self.assertEqual(
                 "application/json", response.headers["Content-type"])
             self.assertEqual({"submissions": [mock_submission]}, json)
+
+    @mock.patch('springapi.routes.submissions.add_submission')
+    def test_post_returns_submission(self, mocked):
+        mock_firebase = MockFirebase()
+        mock_submission = {"name": "Some Guy", "message": "Hi there"}
+        mocked.return_value = mock_firebase.add_submission(mock_submission)
+
+        with make_test_client() as client:
+            response = client.post("/api/v1/submission", data=mock_submission)
+            self.assertEqual("200 OK", response.status)
+            json = response.get_json()
+            self.assertEqual(
+                "application/json", response.headers["Content-type"])
+            self.assertEqual(mock_submission, json)

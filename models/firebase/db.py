@@ -6,3 +6,7 @@ def get_collection(collection):
     collection_ref = db.collection(f'{collection}')
     submissions = collection_ref.stream()
     return submissions
+
+
+def add_submission(data):
+    pass
