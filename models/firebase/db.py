@@ -10,3 +10,7 @@ def get_collection(collection):
 
 def add_entry(data):
     pass
+
+
+def update_entry(data):
+    pass
