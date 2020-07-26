@@ -1,5 +1,5 @@
 from springapi.helpers import route, VERSION
-from models.firebase.db import get_collection, add_submission
+from models.firebase.db import get_collection, add_entry
 from flask import request, jsonify
 
 
@@ -13,5 +13,5 @@ def get_submissions():
 @route(f"/api/{VERSION}/submission", methods=['POST'])
 def create_submission():
     request_data = request.data.decode('utf-8')
-    response = add_submission(request_data)
+    response = add_entry(request_data)
     return jsonify(response)

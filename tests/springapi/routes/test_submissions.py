@@ -46,7 +46,7 @@ class TestSubmissionsRoute(unittest.TestCase):
                 "application/json", response.headers["Content-type"])
             self.assertEqual({"submissions": [mock_submission]}, json)
 
-    @mock.patch('springapi.routes.submissions.add_submission')
+    @mock.patch('springapi.routes.submissions.add_entry')
     def test_post_returns_submission(self, mocked):
         mock_firebase = MockFirebase()
         mock_submission = {"name": "Some Guy", "message": "Hi there"}

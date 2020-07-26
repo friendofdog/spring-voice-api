@@ -8,5 +8,5 @@ def get_collection(collection):
     return submissions
 
 
-def add_submission(data):
+def add_entry(data):
     pass
