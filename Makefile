@@ -2,9 +2,8 @@
 
 all: test lint type-check
 
-export FLASK_ENV := testing
-
 test:
+	export FLASK_ENV=testing && \
 	pytest -q
 
 lint:
