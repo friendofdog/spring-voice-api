@@ -2,7 +2,7 @@ import contextlib
 from springapi.app import create_app
 
 
-class MockFirebase(object):
+class MockDatabase(object):
 
     def __init__(self):
         self._submissions = []

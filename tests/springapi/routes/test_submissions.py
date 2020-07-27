@@ -1,6 +1,6 @@
 import unittest
 from unittest import mock
-from tests.springapi.helpers import make_test_client, MockFirebase
+from tests.springapi.helpers import make_test_client, MockDatabase
 
 
 class TestSubmissionsRoute(unittest.TestCase):
@@ -20,10 +20,10 @@ class TestSubmissionsRoute(unittest.TestCase):
 
     @mock.patch('springapi.routes.submissions.get_collection')
     def test_get_returns_submissions_in_list(self, mocked):
-        mock_firebase = MockFirebase()
+        mock_db = MockDatabase()
         mock_submission = {"name": "Foo Bar", "message": "foobar"}
-        mock_firebase.add_submission(mock_submission)
-        mocked.return_value = mock_firebase.get_submissions()
+        mock_db.add_submission(mock_submission)
+        mocked.return_value = mock_db.get_submissions()
 
         with make_test_client() as client:
             response = client.get("/api/v1/submissions")

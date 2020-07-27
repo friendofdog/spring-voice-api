@@ -4,7 +4,7 @@ import unittest
 from unittest import mock
 
 
-class TestAppCration(unittest.TestCase):
+class TestSpringapiAppCreation(unittest.TestCase):
 
     def test_springapi_starts_in_testing(self):
         app = create_app()
