@@ -1,13 +1,14 @@
-import firebase_admin as fb  # type: ignore
-import models.firebase.config as config_file
+import firebase_admin as auth  # type: ignore
+from dotenv import load_dotenv
+import os
 
 
-def authenticate(env):
-    config = getattr(config_file, env)
-    proj_id = config.PROJECT_ID
-    cred_file = config.CREDENTIALS_FILE
-    cred = fb.credentials.Certificate(f'./models/firebase/{cred_file}')
-    fb.initialize_app(cred, {
+def authenticate():
+    load_dotenv()
+    proj_id = os.getenv('PROJECT_ID')
+    cred_file = os.getenv('CREDENTIALS_FILE')
+    app = auth.credentials.Certificate(f'./models/firebase/{cred_file}')
+    auth.initialize_app(app, {
         'projectId': f'{proj_id}',
         'storageBucket': f'{proj_id}.appspot.com'
     })
