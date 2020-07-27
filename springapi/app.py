@@ -1,4 +1,5 @@
 from flask import Flask
+from dotenv import load_dotenv
 
 from springapi.helpers import register
 from springapi.routes.healthcheck import healthcheck
@@ -7,6 +8,7 @@ from springapi.routes.submission import create_submission, update_submission
 
 
 def create_app():
+    load_dotenv()
     app = Flask(__name__)
     register(app, healthcheck)
     register(app, get_submissions)

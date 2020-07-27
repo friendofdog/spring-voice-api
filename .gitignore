@@ -2,3 +2,4 @@
 /.mypy_cache/
 /models/firebase/credentials*
 /models/firebase/config.py
+.env
