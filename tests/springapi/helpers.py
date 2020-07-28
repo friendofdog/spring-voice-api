@@ -7,15 +7,21 @@ class MockDatabase(object):
     def __init__(self):
         self._submissions = []
 
-    def add_submission(self, submission):
+    def add_entry(self, submission):
         self._submissions.append(submission)
-        return submission
+        return self._submissions[-1], 201
 
-    def update_submission(self, submission):
-        self._submissions[0] = submission
-        return submission
+    def update_entry(self, update):
+        i, sub = next(([i, s] for i, s in enumerate(self._submissions)
+                       if s['id'] == update['id']), ['', ''])
+        if sub:
+            self._submissions[i] = update
+            return self._submissions[i], 200
+        else:
+            add = self.add_entry(update)
+            return add
 
-    def get_submissions(self):
+    def get_collection(self):
         return self._submissions
 
 

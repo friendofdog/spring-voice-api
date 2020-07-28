@@ -3,8 +3,8 @@ from dotenv import load_dotenv
 
 from springapi.helpers import register
 from springapi.routes.healthcheck import healthcheck
-from springapi.routes.submissions import get_submissions
-from springapi.routes.submission import create_submission, update_submission
+from springapi.routes.submissions \
+    import get_submissions, create_submission, update_submission
 
 
 def create_app():
