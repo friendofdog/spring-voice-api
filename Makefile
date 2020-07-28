@@ -1,15 +1,20 @@
 .PHONY: test lint type-check
 
+SHELL := /bin/bash
+
 all: test lint type-check
 
 test:
-	export FLASK_ENV=testing && \
-	pytest -q
+	set -a; source test.env; set +a && \
+	python3 -m pytest -q
+
+run:
+	set -a; source dev.env; set +a && \
+	python3 -m springapi.app
 
 lint:
-	flake8 tests/ springapi/ models/
+	python3 -m flake8 tests/ springapi/
 
 type-check:
-	mypy tests/*.py tests/**/*.py \
-	springapi/*.py springapi/**/*.py \
-	models/*.py models/**/*.py
+	python3 -m mypy tests/*.py tests/**/*.py \
+	springapi/*.py springapi/**/*.py springapi/**/**/*.py

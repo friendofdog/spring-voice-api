@@ -1,4 +1,4 @@
-from models.firebase.app import authenticate
+from springapi.models.firebase.app import authenticate
 import os
 import unittest
 from unittest import mock
@@ -24,7 +24,7 @@ class TestFirebaseAppCreation(unittest.TestCase):
         except FileNotFoundError:
             self.assertRaises(FileNotFoundError)
 
-    @mock.patch('models.firebase.app.auth.credentials.Certificate')
+    @mock.patch('springapi.models.firebase.app.auth.credentials.Certificate')
     def test_firebase_raises_error_when_bad_credentials(self, mocked):
         mocked.return_value = MockGoogleAuthCredentials
         try:

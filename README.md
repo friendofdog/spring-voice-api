@@ -15,13 +15,13 @@ Using this Application
 ### Setup
 
 1. Optional: Set up and activate virtual environment, or packages will install globally
-2. `pip install -r dependencies.py`
-3. `pip install -r dependencies-dev.py`
-4. Copy `example.env` to `.env` and populate the environment variables with real values
+2. Use example.env as a template to create .env files for environment variables. test.env is required for `make test` and dev.env is required for `make run`.
+3. `pip install -r dependencies.py`
+4. `pip install -r dependencies-dev.py`
 
 ### Starting up the app
 
-`python3 run.py` will start the app in production mode, which is the default for Flask. If you want to run the app in `testing` or `development`, set the `FLASK_ENV` environment variable to one of those values.
+`make run` will start the app in production mode.
 
 ### Testing
 

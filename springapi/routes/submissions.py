@@ -1,5 +1,6 @@
 from springapi.helpers import route, VERSION
-from models.firebase.db import get_collection, add_entry, update_entry
+from springapi.models.firebase.db \
+    import get_collection, add_entry, update_entry
 from flask import request, jsonify
 
 

@@ -1,4 +1,4 @@
-from tests.springapi.helpers import make_test_client
+from tests.helpers import make_test_client
 import unittest
 
 

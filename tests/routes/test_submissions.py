@@ -1,6 +1,6 @@
 import unittest
 from unittest import mock
-from tests.springapi.helpers import make_test_client, MockDatabase
+from tests.helpers import make_test_client, MockDatabase
 
 
 class TestSubmissionsRoute(unittest.TestCase):
