@@ -1,7 +1,7 @@
 import unittest
 from mockfirestore import MockFirestore
 from unittest import mock
-from springapi.models.firebase.db import get_collection
+from springapi.models.firebase.db import get_collection, add_entry
 
 
 class TestFirebaseCalls(unittest.TestCase):
@@ -26,3 +26,16 @@ class TestFirebaseCalls(unittest.TestCase):
 
         response = get_collection(collection)
         self.assertEqual(response[entry_id], entry_data)
+
+    @mock.patch('springapi.models.firebase.db.firestore.client')
+    def test_add_entry_creates_entry_in_db(self, mocked):
+        entry_data = {"name": "qwerty", "message": "Hi there"}
+        collection = 'submissions'
+
+        mock_db = MockFirestore()
+        mocked.return_value = mock_db
+
+        response, status = add_entry(collection, entry_data)
+        print(response)
+        self.assertEqual(response, entry_data)
+        self.assertEqual(status, "201 CREATED")

@@ -14,8 +14,8 @@ def get_submissions():
 @route(f"/api/{VERSION}/submissions", methods=['POST'])
 def create_submission():
     request_data = request.data.decode('utf-8')
-    response, status = add_entry(request_data)
-    return jsonify(response), status
+    response, status = add_entry('submissions', request_data)
+    return response, status
 
 
 @route(f"/api/{VERSION}/submissions", methods=['PUT'])
