@@ -1,5 +1,4 @@
 from flask import Flask
-import os
 
 from springapi.helpers import register
 from springapi.models.firebase.app import authenticate
