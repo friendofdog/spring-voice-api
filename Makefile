@@ -5,11 +5,11 @@ SHELL := /bin/bash
 all: test lint type-check
 
 test:
-	set -a; source test.env; set +a && \
+	set -a && source test.env && set +a && \
 	python3 -m pytest -q
 
 run:
-	set -a; source dev.env; set +a && \
+	set -a && source dev.env && set +a && \
 	python3 -m springapi.app
 
 lint:
