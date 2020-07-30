@@ -1,4 +1,5 @@
 import contextlib
+from mockfirestore import MockFirestore
 from springapi.app import create_app
 
 
@@ -23,6 +24,19 @@ class MockDatabase(object):
 
     def get_collection(self):
         return self._submissions
+
+
+def populate_mock_firestore_submissions():
+    initial_entries = [
+        {"name": "Some Guy", "message": "Hi there"},
+        {"name": "Another Fellow", "message": "Goodbye"}
+    ]
+
+    mock_db = MockFirestore()
+    for entry in initial_entries:
+        mock_db.collection('submissions').add(entry)
+
+    return mock_db
 
 
 @contextlib.contextmanager

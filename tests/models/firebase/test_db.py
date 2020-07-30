@@ -1,41 +1,31 @@
 import unittest
+from tests.helpers import populate_mock_firestore_submissions
 from mockfirestore import MockFirestore
-from unittest import mock
 from springapi.models.firebase.db import get_collection, add_entry
+from unittest import mock
 
 
 class TestFirebaseCalls(unittest.TestCase):
 
     @mock.patch('springapi.models.firebase.db.firestore.client')
-    def test_get_collection_returns_empty_if_none_found(self, mocked):
-        mock_db = MockFirestore()
-        mocked.return_value = mock_db
+    def test_get_collection_returns_empty_if_collection_notfound(self, mocked):
+        mocked.return_value = populate_mock_firestore_submissions()
 
-        response = get_collection('submissions')
-        self.assertEqual(response, {})
+        response = get_collection('nonexistent')
+        self.assertFalse(response)
 
     @mock.patch('springapi.models.firebase.db.firestore.client')
-    def test_get_collection_contains_expected_entry(self, mocked):
-        entry_data = {"name": "qwerty", "message": "Hi there"}
-        entry_id = '1'
-        collection = 'submissions'
+    def test_get_collection_returns_entries_if_collection_exists(self, mocked):
+        mocked.return_value = populate_mock_firestore_submissions()
 
-        mock_db = MockFirestore()
-        mock_db.collection(collection).add(entry_data, entry_id)
-        mocked.return_value = mock_db
-
-        response = get_collection(collection)
-        self.assertEqual(response[entry_id], entry_data)
+        response = get_collection('submissions')
+        self.assertTrue(response)
 
     @mock.patch('springapi.models.firebase.db.firestore.client')
     def test_add_entry_creates_entry_in_db(self, mocked):
-        entry_data = {"name": "qwerty", "message": "Hi there"}
-        collection = 'submissions'
+        entry_data = {"name": "This Person", "message": "Ohayo"}
+        mocked.return_value = MockFirestore()
 
-        mock_db = MockFirestore()
-        mocked.return_value = mock_db
-
-        response, status = add_entry(collection, entry_data)
-        print(response)
+        response, status = add_entry('submissions', entry_data)
         self.assertEqual(response, entry_data)
         self.assertEqual(status, "201 CREATED")
