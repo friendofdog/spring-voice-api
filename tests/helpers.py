@@ -26,15 +26,11 @@ class MockDatabase(object):
         return self._submissions
 
 
-def populate_mock_firestore_submissions():
-    initial_entries = [
-        [{"name": "Some Guy", "message": "Hi there"}, '1'],
-        [{"name": "Another Fellow", "message": "Goodbye"}, '2']
-    ]
+def populate_mock_firestore_submissions(entries):
 
     mock_db = MockFirestore()
-    for data, entry_id in initial_entries:
-        mock_db.collection('submissions').add(data, entry_id)
+    for key, data in entries.items():
+        mock_db.collection('submissions').add(data, key)
 
     return mock_db
 

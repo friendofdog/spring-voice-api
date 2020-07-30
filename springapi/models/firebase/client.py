@@ -4,11 +4,11 @@ from google.api_core import exceptions as google_exceptions  # type: ignore
 
 def get_collection(collection):
     client = firestore.client()
-    collection_obj = client.collection(f'{collection}').stream()
-    submissions = {}
-    for e in collection_obj:
-        submissions[e.id] = e.to_dict()
-    return submissions
+    response = client.collection(f'{collection}').stream()
+    collection_obj = {}
+    for r in response:
+        collection_obj[r.id] = r.to_dict()
+    return collection_obj
 
 
 def add_entry(collection, data, entry_id=None):
