@@ -1,10 +1,10 @@
 from firebase_admin import firestore  # type: ignore
-from google.api_core import exceptions as google_exceptions
+from google.api_core import exceptions as google_exceptions  # type: ignore
 
 
 def get_collection(collection):
-    db = firestore.client()
-    collection_obj = db.collection(f'{collection}').stream()
+    client = firestore.client()
+    collection_obj = client.collection(f'{collection}').stream()
     submissions = {}
     for e in collection_obj:
         submissions[e.id] = e.to_dict()
@@ -12,9 +12,9 @@ def get_collection(collection):
 
 
 def add_entry(collection, data, entry_id=None):
-    db = firestore.client()
+    client = firestore.client()
     try:
-        __, response = db.collection(collection).add(data, entry_id)
+        __, response = client.collection(collection).add(data, entry_id)
         added = response.get().to_dict()
         status = '201 CREATED'
     except google_exceptions.AlreadyExists as e:
@@ -24,9 +24,9 @@ def add_entry(collection, data, entry_id=None):
 
 
 def update_entry(collection, data, entry_id):
-    db = firestore.client()
+    client = firestore.client()
     try:
-        db.collection(collection).document(entry_id).update(data)
+        client.collection(collection).document(entry_id).update(data)
         updated = f'{entry_id} updated'
         status = '200 OK'
     except google_exceptions.NotFound as e:

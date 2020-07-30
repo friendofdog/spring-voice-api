@@ -1,5 +1,5 @@
 import contextlib
-from mockfirestore import MockFirestore
+from mockfirestore import MockFirestore  # type: ignore
 from springapi.app import create_app
 
 
