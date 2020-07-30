@@ -12,10 +12,13 @@ def get_collection(collection):
 
 def add_entry(collection, data):
     db = firestore.client()
-    __, response = db.collection(collection).add(data)
-    entry = response.get().to_dict()
-    status = '201 CREATED'  # WIP, need to dynamically create status code
-                            # Response does not include status code
+    try:
+        __, response = db.collection(collection).add(data)
+        entry = response.get().to_dict()
+        status = '201 CREATED'
+    except Exception as e:
+        entry = str(e)
+        status = '500 INTERNAL SERVER ERROR'
     return entry, status
 
 
