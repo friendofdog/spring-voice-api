@@ -11,6 +11,13 @@ def get_collection(collection):
     return collection_obj
 
 
+def get_entry(collection, entry_id):
+    client = firestore.client()
+    response = client.collection(collection).document(entry_id).get()
+    entry = response.to_dict()
+    return entry
+
+
 def add_entry(collection, data, entry_id=None):
     client = firestore.client()
     try:
