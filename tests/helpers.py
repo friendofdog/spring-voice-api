@@ -26,7 +26,7 @@ class MockDatabase(object):
         return self._submissions
 
 
-def populate_mock_firestore_submissions(entries):
+def populate_mock_submissions(entries):
 
     mock_db = MockFirestore()
     for key, data in entries.items():

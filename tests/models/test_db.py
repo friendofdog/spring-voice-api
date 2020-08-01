@@ -6,7 +6,7 @@ from springapi.models.db import \
     get_submissions,\
     get_submission,\
     create_submission
-from tests.helpers import populate_mock_firestore_submissions
+from tests.helpers import populate_mock_submissions
 from unittest import mock
 
 
@@ -42,6 +42,7 @@ class TestDatabaseValidationCalls(unittest.TestCase):
         self.assertEqual(bad_types, [])
 
 
+@mock.patch('springapi.models.firebase.client.firestore.client')
 class TestDatabaseCalls(unittest.TestCase):
 
     def __init__(self, *args, **kwargs):
@@ -51,23 +52,20 @@ class TestDatabaseCalls(unittest.TestCase):
             "2": {"name": "Another Fellow", "message": "Goodbye"}
         }
 
-    @mock.patch('springapi.models.firebase.client.firestore.client')
-    def test_get_submissions_returns_empty_if_none_found(self, mocked):
-        mocked.return_value = MockFirestore()
+    def test_get_submissions_returns_empty_if_none_found(self, mock_client):
+        mock_client.return_value = MockFirestore()
 
         response = get_submissions()
         self.assertFalse(response)
 
-    @mock.patch('springapi.models.firebase.client.firestore.client')
-    def test_get_submissions_returns_list_if_found(self, mocked):
-        mocked.return_value = populate_mock_firestore_submissions(self.entries)
+    def test_get_submissions_returns_list_if_found(self, mock_client):
+        mock_client.return_value = populate_mock_submissions(self.entries)
 
         response = get_submissions()
         self.assertEqual(response, self.entries)
 
-    @mock.patch('springapi.models.firebase.client.firestore.client')
-    def test_get_submission_returns_404_if_not_found(self, mocked):
-        mocked.return_value = populate_mock_firestore_submissions(self.entries)
+    def test_get_submission_returns_404_if_not_found(self, mock_client):
+        mock_client.return_value = populate_mock_submissions(self.entries)
 
         entry_id = 'missing-entry'
         not_found = f'Entry with id {entry_id} not found in submissions'
@@ -76,9 +74,8 @@ class TestDatabaseCalls(unittest.TestCase):
         self.assertEqual(status, '404 NOT FOUND')
         self.assertEqual(response, not_found)
 
-    @mock.patch('springapi.models.firebase.client.firestore.client')
-    def test_get_submission_returns_submission_if_found(self, mocked):
-        mocked.return_value = populate_mock_firestore_submissions(self.entries)
+    def test_get_submission_returns_submission_if_found(self, mock_client):
+        mock_client.return_value = populate_mock_submissions(self.entries)
 
         response, status = get_submission('1')
         self.assertEqual(status, '200 OK')
@@ -87,7 +84,7 @@ class TestDatabaseCalls(unittest.TestCase):
     @mock.patch('springapi.models.db.check_type')
     @mock.patch('springapi.models.db.check_required_fields')
     def test_create_submission_returns_missing_field_error(
-            self, mock_type, mock_req):
+            self, mock_type, mock_req, __):
         mock_type.return_value = ['some_field', 'another_field']
         mock_req.return_value = []
 
@@ -99,7 +96,7 @@ class TestDatabaseCalls(unittest.TestCase):
     @mock.patch('springapi.models.db.check_type')
     @mock.patch('springapi.models.db.check_required_fields')
     def test_create_submission_returns_type_check_error(
-            self, mock_req, mock_type):
+            self, mock_req, mock_type, __):
         mock_type.return_value = ['name']
         mock_req.return_value = []
 
@@ -111,9 +108,8 @@ class TestDatabaseCalls(unittest.TestCase):
 
     @mock.patch('springapi.models.db.check_type')
     @mock.patch('springapi.models.db.check_required_fields')
-    @mock.patch('springapi.models.firebase.client.firestore.client')
     def test_create_submission_succeeds_if_checks_passed(
-            self, mock_client, mock_req, mock_type):
+            self, mock_req, mock_type, mock_client):
         mock_type.return_value = []
         mock_req.return_value = []
         mock_client.return_value = MockFirestore()
