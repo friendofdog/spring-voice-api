@@ -45,24 +45,23 @@ class TestDataValidation(unittest.TestCase):
         submission = Submission()
 
         data = {'name': 'This Person'}
-        response, status = submission._validate_data(data)
-        self.assertEqual(response, 'Missing: some_field, another_field')
-        self.assertEqual(status, '400 BAD REQUEST')
+        response = submission._validate_data(data)
+        self.assertEqual(response[0], 'Missing: some_field, another_field')
 
     @mock.patch('springapi.models.db.Submission._check_type')
     @mock.patch('springapi.models.db.Submission._check_required_fields')
     def test_validate_data_returns_type_check_error(
-            self, mock_req, mock_type):
-        mock_type.return_value = ['name']
-        mock_req.return_value = []
+            self, mock_type, mock_req):
+        mock_type.return_value = []
+        mock_req.return_value = ['name']
 
         submission = Submission()
 
         data = {'name': 10, 'message': 'hello'}
-        response, status = submission._validate_data(data)
-        self.assertEqual(response, 'Fields with type errors: name is int '
-                                   'should be str')
-        self.assertEqual(status, '400 BAD REQUEST')
+        response = submission._validate_data(data)
+        self.assertEqual(
+            response[0], 'Fields with type errors: name is int, should be str.'
+        )
 
 
 @mock.patch('springapi.models.firebase.client.firestore.client')
@@ -106,7 +105,22 @@ class TestDatabaseCalls(unittest.TestCase):
 
     @mock.patch('springapi.models.db.Submission._check_type')
     @mock.patch('springapi.models.db.Submission._check_required_fields')
-    def test_create_submission_succeeds_if_checks_passed(
+    def test_create_submission_fails_if_validation_checks_fail(
+            self, mock_req, mock_type, mock_client):
+        mock_type.return_value = []
+        mock_req.return_value = ['message']
+        mock_client.return_value = MockFirestore()
+
+        submission = Submission()
+
+        data = {'name': 'This Person'}
+        response, status = submission.create_submission(data)
+        self.assertNotEqual(response, data)
+        self.assertEqual(status, '400 BAD REQUEST')
+
+    @mock.patch('springapi.models.db.Submission._check_type')
+    @mock.patch('springapi.models.db.Submission._check_required_fields')
+    def test_create_submission_succeeds_if_validation_checks_pass(
             self, mock_req, mock_type, mock_client):
         mock_type.return_value = []
         mock_req.return_value = []

@@ -34,23 +34,25 @@ class Submission:
         return bad_types
 
     def _validate_data(self, data):
+        errors = []
         missing = self._check_required_fields(data)
         if missing:
-            return f'Missing: {", ".join(missing)}', '400 BAD REQUEST'
+            errors.append(f'Missing: {", ".join(missing)}')
 
         bad_types = self._check_type(data)
         if bad_types:
-            type_errors = [f'{e} is {type(data[e]).__name__} should be '
-                           f'{self.fields[e]["type"].__name__}'
+            type_errors = [f'{e} is {type(data[e]).__name__}, should be '
+                           f'{self.fields[e]["type"].__name__}.'
                            for e in bad_types]
-            return f'Fields with type errors: {", ".join(type_errors)}', \
-                   '400 BAD REQUEST'
+            errors.append(f'Fields with type errors: '
+                          f'{" ".join(type_errors)}')
+
+        return errors
 
     def create_submission(self, data):
         invalid = self._validate_data(data)
         if invalid:
-            response, status = invalid
-            return response, status
+            return '\r'.join(invalid), '400 BAD REQUEST'
         else:
             response, status = client.add_entry('submission', data)
             if response and status == '201 CREATED':
