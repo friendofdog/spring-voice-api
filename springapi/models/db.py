@@ -1,18 +1,6 @@
 import springapi.models.firebase.client as client
 
 
-def check_required_fields(fields, data):
-    required = [f for f in fields if fields[f]['isRequired'] is True]
-    missing = sorted(list(set(required) - set(list(data.keys()))))
-    return missing
-
-
-def check_type(fields, data):
-    bad_types = sorted([d for d in data if d in fields.keys() and
-                        type(data[d]) is not fields[d]['type']])
-    return bad_types
-
-
 def get_submissions():
     return client.get_collection('submissions')
 
@@ -20,36 +8,55 @@ def get_submissions():
 def get_submission(entry_id):
     submission = client.get_entry('submissions', entry_id)
     status = '200 OK' if submission else '404 NOT FOUND'
-    response = submission if submission\
+    response = submission if submission \
         else f'Entry with id {entry_id} not found in submissions'
     return response, status
 
 
-def create_submission(data):
-    fields = {
-        'name': {'isRequired': True, 'type': str},
-        'message': {'isRequired': True, 'type': str},
-        'location': {'isRequired': True, 'type': str}
-    }
+class Submission:
 
-    missing = check_required_fields(fields, data)
-    if missing:
-        return f'Missing: {", ".join(missing)}', '400 BAD REQUEST'
+    def __init__(self):
+        self.fields = {
+            'name': {'isRequired': True, 'type': str},
+            'message': {'isRequired': True, 'type': str},
+            'location': {'isRequired': True, 'type': str}
+        }
 
-    bad_types = check_type(fields, data)
-    if bad_types:
-        type_errors = [f'{e} is {type(data[e]).__name__} should be '
-                       f'{fields[e]["type"].__name__}'
-                       for e in bad_types]
-        return f'Fields with type errors: {", ".join(type_errors)}', \
-               '400 BAD REQUEST'
+    def _check_required_fields(self, data):
+        required = [f for f in self.fields if
+                    self.fields[f]['isRequired'] is True]
+        missing = sorted(list(set(required) - set(list(data.keys()))))
+        return missing
 
-    response, status = client.add_entry('submission', data)
-    if response and status == '201 CREATED':
-        return response, status
-    else:
-        return 'A server error occured', '500 INTERNAL SERVER ERROR'
+    def _check_type(self, data):
+        bad_types = sorted([d for d in data if d in self.fields.keys() and
+                            type(data[d]) is not self.fields[d]['type']])
+        return bad_types
 
+    def _validate_data(self, data):
+        missing = self._check_required_fields(data)
+        if missing:
+            return f'Missing: {", ".join(missing)}', '400 BAD REQUEST'
 
-def update_submission():
-    pass
+        bad_types = self._check_type(data)
+        if bad_types:
+            type_errors = [f'{e} is {type(data[e]).__name__} should be '
+                           f'{self.fields[e]["type"].__name__}'
+                           for e in bad_types]
+            return f'Fields with type errors: {", ".join(type_errors)}', \
+                   '400 BAD REQUEST'
+
+    def create_submission(self, data):
+        invalid = self._validate_data(data)
+        if invalid:
+            response, status = invalid
+            return response, status
+        else:
+            response, status = client.add_entry('submission', data)
+            if response and status == '201 CREATED':
+                return response, status
+            else:
+                return 'A server error occured', '500 INTERNAL SERVER ERROR'
+
+    def update_submission(self):
+        pass
