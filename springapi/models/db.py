@@ -52,13 +52,14 @@ class Submission:
     def create_submission(self, data):
         invalid = self._validate_data(data)
         if invalid:
-            return '\r'.join(invalid), '400 BAD REQUEST'
+            return '\r\n'.join(invalid), '400 BAD REQUEST'
         else:
             response, status = client.add_entry('submission', data)
             if response and status == '201 CREATED':
                 return response, status
             else:
-                return 'A server error occured', '500 INTERNAL SERVER ERROR'
+                return 'An error occured:\r\n' \
+                       f'{response}', status
 
     def update_submission(self):
         pass

@@ -37,7 +37,7 @@ class TestDataValidation(unittest.TestCase):
 
     @mock.patch('springapi.models.db.Submission._check_type')
     @mock.patch('springapi.models.db.Submission._check_required_fields')
-    def test_validate_data_missing_field_error(
+    def test_validate_data_returns_missing_field_error_message(
             self, mock_type, mock_req):
         mock_type.return_value = ['some_field', 'another_field']
         mock_req.return_value = []
@@ -50,7 +50,7 @@ class TestDataValidation(unittest.TestCase):
 
     @mock.patch('springapi.models.db.Submission._check_type')
     @mock.patch('springapi.models.db.Submission._check_required_fields')
-    def test_validate_data_returns_type_check_error(
+    def test_validate_data_returns_type_check_error_message(
             self, mock_type, mock_req):
         mock_type.return_value = []
         mock_req.return_value = ['name']
@@ -103,28 +103,21 @@ class TestDatabaseCalls(unittest.TestCase):
         self.assertEqual(status, '200 OK')
         self.assertEqual(response, self.entries['1'])
 
-    @mock.patch('springapi.models.db.Submission._check_type')
-    @mock.patch('springapi.models.db.Submission._check_required_fields')
+    @mock.patch('springapi.models.db.Submission._validate_data')
     def test_create_submission_fails_if_validation_checks_fail(
-            self, mock_req, mock_type, mock_client):
-        mock_type.return_value = []
-        mock_req.return_value = ['message']
-        mock_client.return_value = MockFirestore()
+            self, mock_validation, __):
+        error = mock_validation.return_value = ['some error occured']
 
         submission = Submission()
 
-        data = {'name': 'This Person'}
-        response, status = submission.create_submission(data)
-        self.assertNotEqual(response, data)
+        response, status = submission.create_submission({})
+        self.assertEqual(response, error[0])
         self.assertEqual(status, '400 BAD REQUEST')
 
-    @mock.patch('springapi.models.db.Submission._check_type')
-    @mock.patch('springapi.models.db.Submission._check_required_fields')
+    @mock.patch('springapi.models.db.Submission._validate_data')
     def test_create_submission_succeeds_if_validation_checks_pass(
-            self, mock_req, mock_type, mock_client):
-        mock_type.return_value = []
-        mock_req.return_value = []
-        mock_client.return_value = MockFirestore()
+            self, mock_validation, __):
+        mock_validation.return_value = []
 
         submission = Submission()
 
@@ -132,3 +125,17 @@ class TestDatabaseCalls(unittest.TestCase):
         response, status = submission.create_submission(data)
         self.assertEqual(response, data)
         self.assertEqual(status, '201 CREATED')
+
+    @mock.patch('springapi.models.firebase.client.add_entry')
+    @mock.patch('springapi.models.db.Submission._validate_data')
+    def test_create_submission_returns_server_error_message(
+            self, mock_validation, mock_add, __):
+        mock_validation.return_value = []
+        error = mock_add.return_value = ['some error happened', '500']
+
+        submission = Submission()
+
+        response, status = submission.create_submission({})
+        self.assertEqual('An error occured:\r\n'
+                         f'{error[0]}', response)
+        self.assertEqual(status, error[1])
