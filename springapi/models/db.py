@@ -61,5 +61,15 @@ class Submission:
                 return 'An error occured:\r\n' \
                        f'{response}', status
 
-    def update_submission(self):
-        pass
+    def update_submission(self, data, entry_id):
+        invalid = self._validate_data(data)
+        if invalid:
+            return '\r\n'.join(invalid), '400 BAD REQUEST'
+        else:
+            response, status = client.update_entry(
+                'submission', data, entry_id)
+            if response and status == '200 OK':
+                return response, status
+            else:
+                return 'An error occured:\r\n' \
+                       f'{response}', status

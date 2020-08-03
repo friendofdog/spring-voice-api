@@ -133,3 +133,40 @@ class TestDatabaseCalls(unittest.TestCase):
         response, status = self.submission.create_submission(data)
         self.assertEqual(response, data)
         self.assertEqual(status, expected_status)
+
+    @mock.patch('springapi.models.firebase.client.update_entry')
+    @mock.patch('springapi.models.db.Submission._validate_data')
+    def test_update_submission_fails_if_submission_not_found(
+            self, mock_validation, mock_update):
+        entry_id = '3'
+        data = {'name': 'New Name', 'message': 'new message'}
+        error = mock_update.return_value = [f'Entry {entry_id} not found',
+                                            '404']
+        mock_validation.return_value = []
+
+        response, status = self.submission.update_submission(entry_id, data)
+        self.assertIn(error[0], response)
+        self.assertEqual(status, error[1])
+
+    @mock.patch('springapi.models.db.Submission._validate_data')
+    def test_update_submission_fails_on_validation_error(
+            self, mock_validation):
+        error = mock_validation.return_value = ['something invalid']
+
+        response, status = self.submission.update_submission({}, 'abc')
+        self.assertEqual(response, error[0])
+        self.assertEqual(status, '400 BAD REQUEST')
+
+    @mock.patch('springapi.models.firebase.client.update_entry')
+    @mock.patch('springapi.models.db.Submission._validate_data')
+    def test_update_submission_succeeds_if_found_and_data_valid(
+            self, mock_validation, mock_update):
+        entry_id = '1'
+        data = {'name': 'New Name', 'message': 'new message'}
+        update = mock_update.return_value = [f'Entry {entry_id} updated',
+                                             '200 OK']
+        mock_validation.return_value = []
+
+        response, status = self.submission.update_submission(data, entry_id)
+        self.assertEqual(response, update[0])
+        self.assertEqual(status, update[1])
