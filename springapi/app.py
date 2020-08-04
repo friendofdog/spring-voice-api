@@ -4,15 +4,15 @@ from springapi.helpers import register
 from springapi.models.firebase.app import authenticate
 from springapi.routes.healthcheck import healthcheck
 from springapi.routes.submissions \
-    import get_submissions, create_submission, update_submission
+    import db_get_submissions, db_create_submission, db_update_submission
 
 
 def create_app():
     app = Flask(__name__)
     register(app, healthcheck)
-    register(app, get_submissions)
-    register(app, create_submission)
-    register(app, update_submission)
+    register(app, db_get_submissions)
+    register(app, db_create_submission)
+    register(app, db_update_submission)
     return app
 
 

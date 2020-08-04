@@ -1,25 +1,28 @@
 from springapi.helpers import route, VERSION
-from springapi.models.firebase.client \
-    import get_collection, add_entry, update_entry
-from flask import request, jsonify
+from springapi.models.db import Submission, get_submissions
+from flask import request
 
 
 @route(f"/api/{VERSION}/submissions", methods=['GET'])
-def get_submissions():
-    submissions = get_collection('submissions')
+def db_get_submissions():
+    submissions = get_submissions()
     response = {"submissions": submissions}
     return response
 
 
 @route(f"/api/{VERSION}/submissions", methods=['POST'])
-def create_submission():
-    request_data = request.data.decode('utf-8')
-    response, status = add_entry('submissions', request_data)
+def db_create_submission():
+    # request_data = request.data.decode('utf-8')
+    request_data = request.args.to_dict()
+    submission = Submission()
+    response, status = submission.create_submission(request_data)
     return response, status
 
 
-@route(f"/api/{VERSION}/submissions", methods=['PUT'])
-def update_submission():
-    request_data = request.data.decode('utf-8')
-    response, status = update_entry(request_data)
-    return jsonify(response), status
+@route(f"/api/{VERSION}/submissions/<entry_id>", methods=['PUT'])
+def db_update_submission(entry_id):
+    # request_data = request.data.decode('utf-8')
+    request_data = request.args.to_dict()
+    submission = Submission()
+    response, status = submission.update_submission(request_data, entry_id)
+    return response, status

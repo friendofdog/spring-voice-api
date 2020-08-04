@@ -1,14 +1,20 @@
 import unittest
 from unittest import mock
-from tests.helpers import make_test_client, MockDatabase
+from tests.helpers import make_test_client
 
 
 class TestSubmissionsRoute(unittest.TestCase):
 
-    @mock.patch('springapi.routes.submissions.get_collection')
-    def test_get_returns_empty_list_without_submissions(self, mocked):
-        empty_list = []
-        mocked.return_value = empty_list
+    def __init__(self, *args, **kwargs):
+        super(TestSubmissionsRoute, self).__init__(*args, **kwargs)
+        self.entries = {
+            "1": {"name": "Some Guy", "message": "Hi there"},
+            "2": {"name": "Another Fellow", "message": "Goodbye"}
+        }
+
+    @mock.patch('springapi.routes.submissions.get_submissions')
+    def test_db_get_submissions_returns_empty_list(self, mocked):
+        mocked.return_value = {}
 
         with make_test_client() as client:
             response = client.get("/api/v1/submissions")
@@ -16,14 +22,11 @@ class TestSubmissionsRoute(unittest.TestCase):
             json = response.get_json()
             self.assertEqual(
                 "application/json", response.headers["Content-type"])
-            self.assertEqual({"submissions": empty_list}, json)
+            self.assertEqual({"submissions": {}}, json)
 
-    @mock.patch('springapi.routes.submissions.get_collection')
-    def test_get_returns_submissions_in_list(self, mocked):
-        mock_db = MockDatabase()
-        mock_submission = {"name": "Foo Bar", "message": "foobar"}
-        mock_db.add_entry(mock_submission)
-        mocked.return_value = mock_db.get_collection()
+    @mock.patch('springapi.routes.submissions.get_submissions')
+    def test_db_get_submissions_returns_submissions_in_list(self, mocked):
+        mocked.return_value = self.entries
 
         with make_test_client() as client:
             response = client.get("/api/v1/submissions")
@@ -31,48 +34,43 @@ class TestSubmissionsRoute(unittest.TestCase):
             json = response.get_json()
             self.assertEqual(
                 "application/json", response.headers["Content-type"])
-            self.assertEqual({"submissions": [mock_submission]}, json)
+            self.assertEqual({"submissions": self.entries}, json)
 
-    @mock.patch('springapi.routes.submissions.add_entry')
-    def test_post_returns_submission(self, mocked):
-        mock_db = MockDatabase()
-        mock_submission = {"name": "Some Guy", "message": "Hi there"}
-        mocked.return_value = mock_db.add_entry(mock_submission)
-
-        with make_test_client() as client:
-            response = client.post("/api/v1/submissions", data=mock_submission)
-            self.assertEqual("201 CREATED", response.status)
-            json = response.get_json()
-            self.assertEqual(
-                "application/json", response.headers["Content-type"])
-            self.assertEqual(mock_submission, json)
-
-    @mock.patch('springapi.routes.submissions.update_entry')
-    def test_put_returns_201_if_submission_not_found(self, mocked):
-        mock_db = MockDatabase()
-        mock_update = {"id": "123", "message": "Goodbye"}
-        mocked.return_value = mock_db.update_entry(mock_update)
+    @mock.patch('springapi.routes.submissions.Submission.create_submission')
+    def test_db_create_submission_returns_submission_on_success(self, mocked):
+        data = {"message": "Greetings", "name": "This Person"}
+        expected_status = '201'
+        mocked.return_value = [data, expected_status]
 
         with make_test_client() as client:
-            response = client.put("/api/v1/submissions", data=mock_update)
-            self.assertEqual("201 CREATED", response.status)
-            json = response.get_json()
+            response = client.post("/api/v1/submissions", json=data)
+            self.assertEqual(response.status, expected_status)
+            self.assertEqual(response.get_json(), data)
             self.assertEqual(
                 "application/json", response.headers["Content-type"])
-            self.assertEqual(mock_update, json)
 
-    @mock.patch('springapi.routes.submissions.update_entry')
-    def test_put_returns_200_if_submission_found(self, mocked):
-        mock_db = MockDatabase()
-        mock_submission = {"id": "123", "message": "Hi there"}
-        mock_update = {"id": "123", "message": "Goodbye"}
-        mock_db.add_entry(mock_submission)
-        mocked.return_value = mock_db.update_entry(mock_update)
+    @mock.patch('springapi.routes.submissions.Submission.update_submission')
+    def test_db_update_submission_returns_404_if_not_found(self, mocked):
+        expected_response = {'error': 'This is an error message'}
+        expected_status = '404'
+        mocked.return_value = [expected_response, expected_status]
 
         with make_test_client() as client:
-            response = client.put("/api/v1/submissions", data=mock_update)
-            self.assertEqual("200 OK", response.status)
-            json = response.get_json()
+            response = client.put("/api/v1/submissions/abc", json={})
+            self.assertEqual(response.status, expected_status)
+            self.assertEqual(response.get_json(), expected_response)
             self.assertEqual(
                 "application/json", response.headers["Content-type"])
-            self.assertEqual(mock_update, json)
+
+    @mock.patch('springapi.routes.submissions.Submission.update_submission')
+    def test_db_update_submission_returns_update_on_success(self, mocked):
+        data = {"message": "Greetings", "name": "This Person"}
+        expected_status = '200'
+        mocked.return_value = [data, expected_status]
+
+        with make_test_client() as client:
+            response = client.put("/api/v1/submissions/abc", json={})
+            self.assertEqual(response.status, expected_status)
+            self.assertEqual(response.get_json(), data)
+            self.assertEqual(
+                "application/json", response.headers["Content-type"])
