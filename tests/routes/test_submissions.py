@@ -36,6 +36,20 @@ class TestSubmissionsRoute(unittest.TestCase):
                 "application/json", response.headers["Content-type"])
             self.assertEqual({"submissions": self.entries}, json)
 
+    @mock.patch('springapi.routes.submissions.get_submission')
+    def test_db_get_submission_returns_submission_if_found(self, mocked):
+        entry_id = 'abc'
+        expected_response = {'name': 'Guy', 'location': 'There'}
+        expected_status = '200'
+        mocked.return_value = [expected_response, expected_status]
+
+        with make_test_client() as client:
+            response = client.get(f'/api/v1/submissions/{entry_id}')
+            self.assertEqual(expected_status, response.status)
+            self.assertEqual(expected_response, response.get_json()[entry_id])
+            self.assertEqual(
+                "application/json", response.headers["Content-type"])
+
     @mock.patch('springapi.routes.submissions.Submission.create_submission')
     def test_db_create_submission_returns_submission_on_success(self, mocked):
         data = {"message": "Greetings", "name": "This Person"}
