@@ -14,17 +14,17 @@ class TestDataValidation(unittest.TestCase):
         missing = self.submission._check_required_fields(data)
         self.assertEqual(missing, ['location'])
 
-    def test_check_required_fields_returns_empty_if_no_missing(self):
+    def test_check_required_fields_returns_empty_if_none_missing(self):
         data = {'name': 'This Person', 'message': 'hello', 'location': 'here'}
         missing = self.submission._check_required_fields(data)
         self.assertFalse(missing)
 
-    def test_check_type_returns_bad_types(self):
+    def test_check_type_returns_list_of_bad_types(self):
         data = {'name': 10, 'message': 'hello'}
         bad_types = self.submission._check_type(data)
         self.assertEqual(bad_types, ['name'])
 
-    def test_check_type_returns_empty_if_types_good(self):
+    def test_check_type_returns_empty_list_if_types_good(self):
         data = {'name': 'This Person', 'message': 'hello'}
         bad_types = self.submission._check_type(data)
         self.assertEqual(bad_types, [])
@@ -100,7 +100,7 @@ class TestDatabaseCalls(unittest.TestCase):
         self.assertEqual(response, self.entries[entry_id])
 
     @mock.patch('springapi.models.db.Submission._validate_data')
-    def test_create_submission_fails_if_validation_checks_fail(
+    def test_create_submission_returns_400_if_validation_checks_fail(
             self, mock_validation):
         error = mock_validation.return_value = ['some error occured']
 
@@ -110,7 +110,7 @@ class TestDatabaseCalls(unittest.TestCase):
 
     @mock.patch('springapi.models.firebase.client.add_entry')
     @mock.patch('springapi.models.db.Submission._validate_data')
-    def test_create_submission_returns_server_error_message(
+    def test_create_submission_returns_500_on_server_error(
             self, mock_validation, mock_add):
         mock_validation.return_value = []
         error = mock_add.return_value = ['some error happened', '500']
@@ -124,7 +124,7 @@ class TestDatabaseCalls(unittest.TestCase):
     @mock.patch('springapi.models.db.Submission._validate_data')
     def test_create_submission_succeeds_if_validation_checks_pass(
             self, mock_validation, mock_add):
-        data = {'name': 'This Person'}
+        data = {'abc': {'name': 'This Person'}}
         expected_status = '201 CREATED'
 
         mock_validation.return_value = []
@@ -136,7 +136,7 @@ class TestDatabaseCalls(unittest.TestCase):
 
     @mock.patch('springapi.models.firebase.client.update_entry')
     @mock.patch('springapi.models.db.Submission._validate_data')
-    def test_update_submission_fails_if_submission_not_found(
+    def test_update_submission_returns_404_if_submission_not_found(
             self, mock_validation, mock_update):
         entry_id = '3'
         data = {'name': 'New Name', 'message': 'new message'}
@@ -149,7 +149,7 @@ class TestDatabaseCalls(unittest.TestCase):
         self.assertEqual(status, error[1])
 
     @mock.patch('springapi.models.db.Submission._validate_data')
-    def test_update_submission_fails_on_validation_error(
+    def test_update_submission_returns_400_on_validation_error(
             self, mock_validation):
         error = mock_validation.return_value = ['something invalid']
 

@@ -54,7 +54,7 @@ class Submission:
         if invalid:
             return '\r\n'.join(invalid), '400 BAD REQUEST'
         else:
-            response, status = client.add_entry('submission', data)
+            response, status = client.add_entry('submissions', data)
             if response and status == '201 CREATED':
                 return response, status
             else:
@@ -67,7 +67,7 @@ class Submission:
             return '\r\n'.join(invalid), '400 BAD REQUEST'
         else:
             response, status = client.update_entry(
-                'submission', data, entry_id)
+                'submissions', data, entry_id)
             if response and status == '200 OK':
                 return response, status
             else:
