@@ -22,10 +22,10 @@ def add_entry(collection, data, entry_id=None):
     client = firestore.client()
     try:
         __, response = client.collection(collection).add(data, entry_id)
-        added = response.get().to_dict()
+        added = {response.get().id: response.get().to_dict()}
         status = '201 CREATED'
-    except google_exceptions.AlreadyExists as e:
-        added = str(e)
+    except google_exceptions.AlreadyExists:
+        added = f'{entry_id} already exists'
         status = '409 Conflict'
     return added, status
 
@@ -36,7 +36,10 @@ def update_entry(collection, data, entry_id):
         client.collection(collection).document(entry_id).update(data)
         updated = f'{entry_id} updated'
         status = '200 OK'
-    except google_exceptions.NotFound as e:
-        updated = str(e)
+    except google_exceptions.NotFound:
+        updated = f'{entry_id} not found'
         status = '404 NOT FOUND'
+    except google_exceptions.NotModified:
+        updated = f'{entry_id} not modified'
+        status = '304 NOT MODIFIED'
     return updated, status
