@@ -1,5 +1,6 @@
 from springapi.helpers import route, VERSION
-from springapi.models.db import Submission, get_submissions, get_submission
+from springapi.models.submission \
+    import Submission, get_submissions, get_submission
 from flask import request
 
 

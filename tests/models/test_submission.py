@@ -1,5 +1,6 @@
 import unittest
-from springapi.models.db import Submission, get_submission, get_submissions
+from springapi.models.submission \
+    import Submission, get_submission, get_submissions
 from unittest import mock
 
 
@@ -29,8 +30,9 @@ class TestDataValidation(unittest.TestCase):
         bad_types = self.submission._check_type(data)
         self.assertEqual(bad_types, [])
 
-    @mock.patch('springapi.models.db.Submission._check_type')
-    @mock.patch('springapi.models.db.Submission._check_required_fields')
+    @mock.patch('springapi.models.submission.Submission._check_type')
+    @mock.patch(
+        'springapi.models.submission.Submission._check_required_fields')
     def test_validate_data_returns_missing_field_error_message(
             self, mock_type, mock_req):
         fields = mock_type.return_value = ['some_field', 'another_field']
@@ -39,8 +41,9 @@ class TestDataValidation(unittest.TestCase):
         response = self.submission._validate_data({})
         self.assertEqual(response[0], f'Missing: {", ".join(fields)}')
 
-    @mock.patch('springapi.models.db.Submission._check_type')
-    @mock.patch('springapi.models.db.Submission._check_required_fields')
+    @mock.patch('springapi.models.submission.Submission._check_type')
+    @mock.patch(
+        'springapi.models.submission.Submission._check_required_fields')
     def test_validate_data_returns_type_check_error_message(
             self, mock_type, mock_req):
         data = {'name': 10, 'message': 'hello'}
@@ -99,7 +102,7 @@ class TestDatabaseCalls(unittest.TestCase):
         self.assertEqual(status, '200 OK')
         self.assertEqual(response, self.entries[entry_id])
 
-    @mock.patch('springapi.models.db.Submission._validate_data')
+    @mock.patch('springapi.models.submission.Submission._validate_data')
     def test_create_submission_returns_400_if_validation_checks_fail(
             self, mock_validation):
         error = mock_validation.return_value = ['some error occured']
@@ -109,7 +112,7 @@ class TestDatabaseCalls(unittest.TestCase):
         self.assertEqual(status, '400 BAD REQUEST')
 
     @mock.patch('springapi.models.firebase.client.add_entry')
-    @mock.patch('springapi.models.db.Submission._validate_data')
+    @mock.patch('springapi.models.submission.Submission._validate_data')
     def test_create_submission_returns_500_on_server_error(
             self, mock_validation, mock_add):
         mock_validation.return_value = []
@@ -121,7 +124,7 @@ class TestDatabaseCalls(unittest.TestCase):
         self.assertEqual(status, error[1])
 
     @mock.patch('springapi.models.firebase.client.add_entry')
-    @mock.patch('springapi.models.db.Submission._validate_data')
+    @mock.patch('springapi.models.submission.Submission._validate_data')
     def test_create_submission_succeeds_if_validation_checks_pass(
             self, mock_validation, mock_add):
         data = {'abc': {'name': 'This Person'}}
@@ -135,7 +138,7 @@ class TestDatabaseCalls(unittest.TestCase):
         self.assertEqual(status, expected_status)
 
     @mock.patch('springapi.models.firebase.client.update_entry')
-    @mock.patch('springapi.models.db.Submission._validate_data')
+    @mock.patch('springapi.models.submission.Submission._validate_data')
     def test_update_submission_returns_404_if_submission_not_found(
             self, mock_validation, mock_update):
         entry_id = '3'
@@ -148,7 +151,7 @@ class TestDatabaseCalls(unittest.TestCase):
         self.assertIn(error[0], response)
         self.assertEqual(status, error[1])
 
-    @mock.patch('springapi.models.db.Submission._validate_data')
+    @mock.patch('springapi.models.submission.Submission._validate_data')
     def test_update_submission_returns_400_on_validation_error(
             self, mock_validation):
         error = mock_validation.return_value = ['something invalid']
@@ -158,7 +161,7 @@ class TestDatabaseCalls(unittest.TestCase):
         self.assertEqual(status, '400 BAD REQUEST')
 
     @mock.patch('springapi.models.firebase.client.update_entry')
-    @mock.patch('springapi.models.db.Submission._validate_data')
+    @mock.patch('springapi.models.submission.Submission._validate_data')
     def test_update_submission_succeeds_if_found_and_data_valid(
             self, mock_validation, mock_update):
         entry_id = '1'
