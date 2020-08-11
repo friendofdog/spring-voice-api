@@ -12,7 +12,7 @@ class TestSubmissionsRoute(unittest.TestCase):
             "2": {"name": "Another Fellow", "message": "Goodbye"}
         }
 
-    @mock.patch('springapi.routes.submissions.get_submissions')
+    @mock.patch('springapi.routes.submissions.Submission.get_submissions')
     def test_db_get_submissions_returns_empty_list(self, mocked):
         mocked.return_value = {}
 
@@ -24,7 +24,7 @@ class TestSubmissionsRoute(unittest.TestCase):
                 "application/json", response.headers["Content-type"])
             self.assertEqual({"submissions": {}}, json)
 
-    @mock.patch('springapi.routes.submissions.get_submissions')
+    @mock.patch('springapi.routes.submissions.Submission.get_submissions')
     def test_db_get_submissions_returns_submissions_in_list(self, mocked):
         mocked.return_value = self.entries
 
@@ -36,7 +36,7 @@ class TestSubmissionsRoute(unittest.TestCase):
                 "application/json", response.headers["Content-type"])
             self.assertEqual({"submissions": self.entries}, json)
 
-    @mock.patch('springapi.routes.submissions.get_submission')
+    @mock.patch('springapi.routes.submissions.Submission.get_submission')
     def test_db_get_submission_returns_submission_if_found(self, mocked):
         entry_id = 'abc'
         expected_response = {'name': 'Guy', 'location': 'There'}

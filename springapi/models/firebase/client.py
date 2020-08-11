@@ -1,21 +1,29 @@
 from firebase_admin import firestore  # type: ignore
 from google.api_core import exceptions as google_exceptions  # type: ignore
+from springapi.models.exceptions import \
+    CollectionNotFound, EntryAlreadyExists, EntryNotFound
 
 
 def get_collection(collection):
     client = firestore.client()
-    response = client.collection(f'{collection}').stream()
+    response = client.collection(f'{collection}')
     collection_obj = {}
-    for r in response:
+    for r in response.stream():
         collection_obj[r.id] = r.to_dict()
-    return collection_obj
+    if collection_obj:
+        return collection_obj
+    else:
+        raise CollectionNotFound(collection)
 
 
 def get_entry(collection, entry_id):
     client = firestore.client()
     response = client.collection(collection).document(entry_id).get()
     entry = response.to_dict()
-    return entry
+    if entry:
+        return entry
+    else:
+        raise EntryNotFound(entry_id, collection)
 
 
 def add_entry(collection, data, entry_id=None):
@@ -23,23 +31,15 @@ def add_entry(collection, data, entry_id=None):
     try:
         __, response = client.collection(collection).add(data, entry_id)
         added = {response.get().id: response.get().to_dict()}
-        status = '201 CREATED'
+        return added
     except google_exceptions.AlreadyExists:
-        added = f'{entry_id} already exists'
-        status = '409 Conflict'
-    return added, status
+        raise EntryAlreadyExists(entry_id, collection)
 
 
 def update_entry(collection, data, entry_id):
     client = firestore.client()
     try:
         client.collection(collection).document(entry_id).update(data)
-        updated = f'{entry_id} updated'
-        status = '200 OK'
+        return f'{entry_id} updated'
     except google_exceptions.NotFound:
-        updated = f'{entry_id} not found'
-        status = '404 NOT FOUND'
-    except google_exceptions.NotModified:
-        updated = f'{entry_id} not modified'
-        status = '304 NOT MODIFIED'
-    return updated, status
+        raise EntryNotFound(entry_id, collection)
