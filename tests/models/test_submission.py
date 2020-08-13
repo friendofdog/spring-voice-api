@@ -81,18 +81,15 @@ class TestDatabaseCalls(unittest.TestCase):
         response = self.submission.get_submission(entry_id)
         self.assertEqual(response, self.entries[entry_id])
 
-    @mock.patch('springapi.models.submission.Submission._validate_data')
-    def test_create_submission_raises_ValidationError(
-            self, mock_validation):
-        error = 'invalid'
-        mock_validation.return_value = [error]
+    def test_create_submission_raises_ValidationError(self):
+        data = {'name': 'a', 'message': 'c'}
 
         with self.assertRaises(ValidationError) as context:
-            self.submission.create_submission({})
+            self.submission.create_submission(data)
 
         self.assertEqual(
             context.exception.error_response_body(),
-            ValidationError(error).error_response_body()
+            ValidationError('Missing: location').error_response_body()
         )
 
     @mock.patch('springapi.models.firebase.client.add_entry')
@@ -106,15 +103,14 @@ class TestDatabaseCalls(unittest.TestCase):
             self.submission.create_submission({})
 
     @mock.patch('springapi.models.firebase.client.add_entry')
-    @mock.patch('springapi.models.submission.Submission._validate_data')
-    def test_create_submission_returns_submission_data_if_validation_passes(
-            self, mock_validation, mock_add):
-        data = {'abc': {'name': 'This Person'}}
-        mock_validation.return_value = []
-        mock_add.return_value = data
+    def test_create_submission_returns_submission_data_if_valid(
+            self, mock_add):
+        entry_id = 'abc'
+        data = {'name': 'a', 'location': 'b', 'message': 'c'}
+        mock_add.return_value = {entry_id: data}
 
         response = self.submission.create_submission(data)
-        self.assertEqual(response, data)
+        self.assertEqual(response, {entry_id: data})
 
     @mock.patch('springapi.models.firebase.client.update_entry')
     @mock.patch('springapi.models.submission.Submission._validate_data')
@@ -127,24 +123,19 @@ class TestDatabaseCalls(unittest.TestCase):
         with self.assertRaises(EntryNotFound):
             self.submission.update_submission(entry_id, {})
 
-    @mock.patch('springapi.models.submission.Submission._validate_data')
-    def test_update_submission_raises_ValidationError(
-            self, mock_validation):
-        mock_validation.return_value = ['invalid']
+    def test_update_submission_raises_ValidationError(self):
+        entry_id = 'abc'
+        data = {'name': 'a', 'message': 'new message'}
 
         with self.assertRaises(ValidationError):
-            self.submission.update_submission('abc', {})
+            self.submission.update_submission(entry_id, data)
 
     @mock.patch('springapi.models.firebase.client.update_entry')
-    @mock.patch('springapi.models.submission.Submission._validate_data')
     def test_update_submission_returns_submission_data_if_found_and_valid(
-            self, mock_validation, mock_update):
-        entry_id = '1'
-        data = {'name': 'New Name', 'message': 'new message'}
-        update = mock_update.return_value = [f'Entry {entry_id} updated',
-                                             '200 OK']
-        mock_validation.return_value = []
+            self, mock_update):
+        entry_id = 'abc'
+        data = {'name': 'a', 'location': 'b', 'message': 'new message'}
+        update = mock_update.return_value = f'Entry {entry_id} updated'
 
-        response, status = self.submission.update_submission(data, entry_id)
-        self.assertEqual(response, update[0])
-        self.assertEqual(status, update[1])
+        response = self.submission.update_submission(entry_id, data)
+        self.assertEqual(response, update)
