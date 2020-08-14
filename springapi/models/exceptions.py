@@ -1,3 +1,6 @@
+import functools
+
+
 class CollectionNotFound(Exception):
 
     def __init__(self, collection):
@@ -5,6 +8,9 @@ class CollectionNotFound(Exception):
 
     def error_response_body(self):
         return {'error': self.message}
+
+    def error_response_body_and_code(self):
+        return self.error_response_body(), 404
 
 
 class EntryAlreadyExists(Exception):
@@ -15,6 +21,9 @@ class EntryAlreadyExists(Exception):
     def error_response_body(self):
         return {'error': self.message}
 
+    def error_response_body_and_code(self):
+        return self.error_response_body(), 409
+
 
 class EntryNotFound(Exception):
 
@@ -23,6 +32,9 @@ class EntryNotFound(Exception):
 
     def error_response_body(self):
         return {'error': self.message}
+
+    def error_response_body_and_code(self):
+        return self.error_response_body(), 404
 
 
 class ServerError(Exception):
@@ -42,3 +54,19 @@ class ValidationError(Exception):
 
     def error_response_body(self):
         return {'error': self.message}
+
+    def error_response_body_and_code(self):
+        return self.error_response_body(), 400
+
+
+def pretty_errors(fn):
+    @functools.wraps(fn)
+    def wrapped_fn(*args, **kwargs):
+        try:
+            return fn(*args, **kwargs)
+        except Exception as e:
+            if hasattr(e, "error_response_body_and_code"):
+                return e.error_response_body_and_code()
+            else:
+                return {"error": "Unexpected server error"}, 500
+    return wrapped_fn
