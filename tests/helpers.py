@@ -1,4 +1,5 @@
 import contextlib
+import unittest
 from mockfirestore import MockFirestore  # type: ignore
 from springapi.app import create_app
 
@@ -26,59 +27,57 @@ class MockDatabase(object):
         return self._submissions
 
 
-class ResponseAssertions(object):
+class ResponseAssertions(unittest.TestCase):
 
-    def _assert_get_returns_code_and_response(
-            self, path, expected_code, expected_response=None):
-        print(path, expected_code, expected_response)
+    def _assert_expected_code_and_response(
+            self, method, path, expected_code, body=None, expected_resp=None):
         with make_test_client() as client:
-            r = client.get(path)
+            call = getattr(client, method)
+            if method in ['post', 'put']:
+                r = call(path, data=body)
+            else:
+                r = call(path)
             self.assertEqual(expected_code, r.status)
             response_body = r.get_json()
-            if expected_response:
-                self.assertEqual(response_body, expected_response)
+            if expected_resp:
+                print(response_body, expected_resp)
+                self.assertEqual(response_body, expected_resp)
             self.assertEqual(
                 "application/json", r.headers["Content-type"])
-
-    def _assert_post_returns_code_and_response(
-            self, path, body, expected_code, expected_response=None):
-        with make_test_client() as client:
-            r = client.post(path, data=body)
-            self.assertEqual(expected_code, r.status)
-            response_body = r.get_json()
-            if expected_response:
-                self.assertEqual(response_body, expected_response)
-            self.assertEqual(
-                "application/json", r.headers["Content-type"])
-
-    def _assert_put_returns_code_and_response(
-            self, path, body, expected_code, expected_response=None):
-        with make_test_client() as client:
-            r = client.put(path, data=body)
-            self.assertEqual(expected_code, r.status)
-            response_body = r.get_json()
-            if expected_response:
-                self.assertEqual(response_body, expected_response)
-            self.assertEqual(
-                "application/json", r.headers["Content-type"])
-
-    def assert_get_raises_not_found(self, path, expected_response=None):
-        return self._assert_get_returns_code_and_response(
-            path, '404 NOT FOUND', expected_response)
 
     def assert_get_raises_ok(self, path, expected_response=None):
-        return self._assert_get_returns_code_and_response(
-            path, '200 OK', expected_response)
+        return self._assert_expected_code_and_response(
+            'get', path, '200 OK', expected_response)
+
+    def assert_get_raises_not_found(self, path, expected_response=None):
+        return self._assert_expected_code_and_response(
+            'get', path, '404 NOT FOUND', expected_response)
+
+    def assert_post_raises_ok(self, path, expected_response=None):
+        return self._assert_expected_code_and_response(
+            'post', path, '201 CREATED', {}, expected_response)
 
     def assert_post_raises_invalid_body(self, path, expected_response=None):
         invalid_body = b'FOOBAR'
-        return self._assert_post_returns_code_and_response(
-            path, invalid_body, '400 BAD REQUEST', expected_response)
+        return self._assert_expected_code_and_response(
+            'post', path, '400 BAD REQUEST', invalid_body, expected_response)
+
+    def assert_post_raises_already_exists(self, path, expected_response=None):
+        return self._assert_expected_code_and_response(
+            'post', path, '409 CONFLICT', {}, expected_response)
+
+    def assert_put_raises_ok(self, path, expected_response=None):
+        return self._assert_expected_code_and_response(
+            'put', path, '200 OK', {}, expected_response)
+
+    def assert_put_raises_not_found(self, path, expected_response=None):
+        return self._assert_expected_code_and_response(
+            'put', path, '404 NOT FOUND', {}, expected_response)
 
     def assert_put_raises_invalid_body(self, path, expected_response=None):
         invalid_body = b'FOOBAR'
-        return self._assert_put_returns_code_and_response(
-            path, invalid_body, '400 BAD REQUEST', expected_response)
+        return self._assert_expected_code_and_response(
+            'put', path, '400 BAD REQUEST', invalid_body, expected_response)
 
 
 def populate_mock_submissions(entries):
