@@ -27,7 +27,7 @@ class MockDatabase(object):
         return self._submissions
 
 
-class ResponseAssertions(unittest.TestCase):
+class RouteResponseAssertions(unittest.TestCase):
 
     def _assert_expected_code_and_response(
             self, method, path, expected_code, body=None, expected_resp=None):
@@ -40,7 +40,6 @@ class ResponseAssertions(unittest.TestCase):
             self.assertEqual(expected_code, r.status)
             response_body = r.get_json()
             if expected_resp:
-                print(response_body, expected_resp)
                 self.assertEqual(response_body, expected_resp)
             self.assertEqual(
                 "application/json", r.headers["Content-type"])
