@@ -2,6 +2,8 @@ import contextlib
 import unittest
 from mockfirestore import MockFirestore  # type: ignore
 from springapi.app import create_app
+from springapi.models import exceptions
+from springapi.models.submission import Submission
 
 
 class MockDatabase(object):
@@ -25,6 +27,97 @@ class MockDatabase(object):
 
     def get_collection(self):
         return self._submissions
+
+
+class SubmissionResponseAssertions(unittest.TestCase):
+
+    def __init__(self, *args, **kwargs):
+        super(SubmissionResponseAssertions, self).__init__(*args, **kwargs)
+        self.submission = Submission()
+
+    def _assert_expected_response_on_no_error(
+            self, method, expected_resp, *data):
+        call = getattr(self.submission, method)
+        if data:
+            response = call(*data)
+        else:
+            response = call()
+        self.assertEqual(response, expected_resp)
+
+    def _assert_expected_exception_and_error(
+            self, method, expected_exception, expected_err, *data):
+        with self.assertRaises(expected_exception) as context:
+            call = getattr(self.submission, method)
+            call(*data)
+        if expected_err:
+            self.assertEqual(
+                context.exception.error_response_body(), expected_err)
+
+    def assert_missing_field_validation_error(self, fields):
+        exception = exceptions.ValidationError
+        err = {'error': f'Missing: {", ".join(fields)}'}
+        return self._assert_expected_exception_and_error(
+            '_validate_data', exception, err, fields)
+
+    def assert_type_validation_error(self, field, value):
+        exception = exceptions.ValidationError
+        err = {'error': f'{field} is {type(value).__name__}, should be str.'}
+        return self._assert_expected_exception_and_error(
+            '_validate_data', exception, err, {field: value})
+
+    def assert_get_submissions_raises_not_found(self):
+        exception = exceptions.CollectionNotFound
+        err = {'error': 'Collection submissions not found'}
+        return self._assert_expected_exception_and_error(
+            'get_submissions', exception, err)
+
+    def assert_get_submissions_returns_all_submissions(self, expected_resp):
+        return self._assert_expected_response_on_no_error(
+            'get_submissions', expected_resp)
+
+    def assert_get_single_submission_raises_not_found(self, entry_id):
+        exception = exceptions.EntryNotFound
+        err = {'error': f'{entry_id} was not found in submissions'}
+        return self._assert_expected_exception_and_error(
+            'get_submission', exception, err, entry_id)
+
+    def assert_get_single_submission_returns_single(
+            self, expected_resp, entry_id):
+        return self._assert_expected_response_on_no_error(
+            'get_submission', expected_resp, entry_id)
+
+    def assert_create_submission_raises_validation_error(self, data):
+        exception = exceptions.ValidationError
+        return self._assert_expected_exception_and_error(
+            'create_submission', exception, {}, data)
+
+    def assert_create_submission_raises_already_exists(self, entry_id, data):
+        exception = exceptions.EntryAlreadyExists
+        err = {'error': f'{entry_id} already exists in submissions'}
+        return self._assert_expected_exception_and_error(
+            'create_submission', exception, err, data)
+
+    def assert_create_submission_returns_success(self, entry_id, data):
+        expected_resp = {entry_id: data}
+        return self._assert_expected_response_on_no_error(
+            'create_submission', expected_resp, data)
+
+    def assert_update_submission_raises_not_found(self, entry_id, data):
+        exception = exceptions.EntryNotFound
+        err = {'error': f'{entry_id} was not found in def'}
+        return self._assert_expected_exception_and_error(
+            'update_submission', exception, err, entry_id, data)
+
+    def assert_update_submission_raises_validation_error(self, entry_id, data):
+        exception = exceptions.ValidationError
+        err = {'error': 'Missing: location'}
+        return self._assert_expected_exception_and_error(
+            'update_submission', exception, err, entry_id, data)
+
+    def assert_update_submission_returns_success(self, entry_id, data):
+        expected_resp = {entry_id: data}
+        return self._assert_expected_response_on_no_error(
+            'update_submission', expected_resp, entry_id, data)
 
 
 class RouteResponseAssertions(unittest.TestCase):
