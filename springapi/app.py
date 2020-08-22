@@ -9,21 +9,19 @@ from springapi.routes.healthcheck import healthcheck
 import springapi.routes.submissions as submissions
 
 
-def create_database_instance(scheme, uri):
+def create_database_instance(config):
+    database_uri = config["DATABASE_URI"]
+    scheme, _ = decode_json_uri(database_uri)
+
     if scheme == "firestore":
-        return authenticate(uri)
+        return authenticate(database_uri)
     else:
         raise ValueError(f"Unknown database protocol: {scheme}")
 
 
 def create_app(config):
-
     config.setdefault("ENV", config.get("FLASK_ENV", "testing"))
     config.setdefault("DEBUG", config["ENV"] == "development")
-
-    database_uri = config["DATABASE_URI"]
-    scheme, _ = decode_json_uri(database_uri)
-    database = create_database_instance(scheme, database_uri)
 
     app = Flask(__name__)
 
@@ -40,6 +38,7 @@ def create_app(config):
 
 def main(environ):
     app = create_app(environ)
+    create_database_instance(environ)
     app.run()
 
 

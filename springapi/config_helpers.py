@@ -1,7 +1,7 @@
 import base64
 import binascii
 import json
-import urllib
+import urllib.parse
 
 
 def encode_json_uri(scheme, config):
