@@ -10,6 +10,10 @@ class MockGoogleAuthCredentials:
 
     @classmethod
     def from_path(cls, path):
+        # the default Firebase Certificate constructor expects a path,
+        # so we're creating a method here that can be used in mocks to
+        # intercept the provided path and make assertions about what's
+        # being passed in
         with open(path, "rb") as fp:
             config = json.loads(fp.read())
         assert isinstance(config, dict)
