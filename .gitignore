@@ -1,4 +1,2 @@
 /.pytest_cache/
 /.mypy_cache/
-/springapi/models/firebase/credentials*
-/*.env

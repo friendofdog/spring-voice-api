@@ -19,22 +19,25 @@ Setup
 1. Optional: Set up and activate a virtual environment, like venv or pyenv.
 2. Install dependencies: `pip install -r dependencies.py`.
 3. Install dev dependencies: `pip install -r dependencies-dev.py`.
-4. Use example.env as a template to create *.env files for environment variables. These include dev.env, prod.env, and test.env. See following section for details.
+4. Acquire service account keys from Google and put it somewhere that can be accessed by this app.*
+5. Configure environment variables (see below).
+
+\* See [Google Cloud documentation](https://cloud.google.com/iam/docs/creating-managing-service-account-keys) for instructions. There is a sample key in this repo, `sample-config.json`.
 
 ### Environment variables
 
-This project uses environment variables for configuration. These can be set manually on your system, but `make` only works if they are set using .env files. The required variables are as follows:
+There are three environment variables which govern how the app runs:
 
-`FLASK_ENV`: This variable is specific to Flask. It is not references anywhere in code, but Flask uses it to start in one mode or another. Values include: `development`, `production`, `testing`. If not set, defaults to `production`.
-
-`PROJECT_ID`: The project ID of your Firebase app. See [Firebase documentation](https://firebase.google.com/docs/projects/learn-more#config-files-objects) for details.
-
-`CREDENTIALS_FILE`: Path to the .json config file for your Firebase project. To acquire the config file, follow instructions in [Firebase documentation](https://support.google.com/firebase/answer/7015592#web). (Note that the code snippet provided by Firebase is not proper JSON. You have to put the keys in "quotes".)
+1. `ENV`: `development`, `production`, `testing`. Defaults to `testing` if not set.
+2. `DEBUG`: `True` or `False`. Defaults to `True` in development, otherwise `False`.
+3. `DATABASE_URI`: Determines the scheme and configuration for the database. The value should be the path to the aforementioned Google Cloud service account key.
 
 Starting up the app
 ===================
 
-`make run` will start the app in development mode. Once started, you can send HTTP requests to `http://localhost:5000/api/v1/<route>` using curl or a client like Postman. Note that if you've set up Firebase correctly, you are making requests to live resources.
+`make run CONFIG=path-to-config` will start the app in development mode. `path-to-config` is wherever you put the Google Cloud service account key.
+
+Once started, you can send HTTP requests to `http://localhost:5000/api/v1/<route>` using curl or a client like Postman. Note that if you've set up Firebase correctly, you are making requests to live resources.
 
 Testing
 =======

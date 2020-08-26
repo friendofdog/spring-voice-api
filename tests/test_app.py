@@ -23,7 +23,7 @@ class TestSpringapiAppCreation(unittest.TestCase):
         with self.assertRaises(ValueError) as context:
             create_database_instance(config)
 
-        self.assertEqual(context.exception.__str__(),
+        self.assertEqual(str(context.exception),
                          f'Unknown database protocol: {scheme}')
 
     @mock.patch('springapi.app.authenticate')
