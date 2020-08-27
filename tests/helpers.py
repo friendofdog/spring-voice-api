@@ -31,6 +31,10 @@ class SubmissionResponseAssertions(unittest.TestCase):
             self.assertEqual(
                 context.exception.error_response_body(), expected_err)
 
+    def assert_missing_fields_get_default_values(self, data, defaults):
+        return self._assert_expected_response_on_no_error(
+            '_set_defaults', defaults, data)
+
     def assert_get_submissions_raises_not_found(self):
         exception = exceptions.CollectionNotFound
         err = {'error': 'Collection submissions not found'}

@@ -3,6 +3,16 @@ from springapi.models import exceptions
 from unittest import mock
 
 
+class TestSubmissionValidation(SubmissionResponseAssertions):
+
+    def test_create_submission_sets_defaults_empty_fields(self):
+        data = {'name': 'a', 'message': 'b', 'location': 'c'}
+        defaults = {'name': 'a', 'message': 'b', 'location': 'c',
+                    'allowSNS': False, 'allowSharing': False,
+                    'isApproved': False}
+        self.assert_missing_fields_get_default_values(data, defaults)
+
+
 @mock.patch('springapi.models.firebase.client.get_collection')
 class TestSubmissionGetAllSubmissions(SubmissionResponseAssertions):
 

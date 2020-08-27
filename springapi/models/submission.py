@@ -52,6 +52,12 @@ class Submission:
                            for e in bad_types]
             raise ValidationError(" ".join(type_errors))
 
+    def _set_defaults(self, data):
+        for f in self.fields:
+            if f not in data:
+                data[f] = self.fields[f]['default']
+        return data
+
     def get_submissions(self):
         response = client.get_collection(self.collection)
         return response
@@ -65,6 +71,8 @@ class Submission:
         if invalid:
             raise ValidationError('\r\n'.join(invalid))
 
+        data = self._set_defaults(data)
+
         response = client.add_entry(self.collection, data)
         return response
 
@@ -72,6 +80,8 @@ class Submission:
         invalid = self._validate_data(data)
         if invalid:
             raise ValidationError('\r\n'.join(invalid))
+
+        data = self._set_defaults(data)
 
         response = client.update_entry(self.collection, data, entry_id)
         return response
