@@ -31,18 +31,6 @@ class SubmissionResponseAssertions(unittest.TestCase):
             self.assertEqual(
                 context.exception.error_response_body(), expected_err)
 
-    def assert_missing_field_validation_error(self, fields):
-        exception = exceptions.ValidationError
-        err = {'error': f'Missing: {", ".join(fields)}'}
-        return self._assert_expected_exception_and_error(
-            '_validate_data', exception, err, fields)
-
-    def assert_type_validation_error(self, field, value):
-        exception = exceptions.ValidationError
-        err = {'error': f'{field} is {type(value).__name__}, should be str.'}
-        return self._assert_expected_exception_and_error(
-            '_validate_data', exception, err, {field: value})
-
     def assert_get_submissions_raises_not_found(self):
         exception = exceptions.CollectionNotFound
         err = {'error': 'Collection submissions not found'}

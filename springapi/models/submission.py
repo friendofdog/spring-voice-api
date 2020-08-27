@@ -7,10 +7,23 @@ class Submission:
     def __init__(self):
         self.collection = 'submissions'
         self.fields = {
-            'name': {'isRequired': True, 'type': str},
-            'message': {'isRequired': True, 'type': str},
-            'location': {'isRequired': True, 'type': str}
+            'allowSharing':
+                {'isRequired': False, 'type': bool, 'default': False},
+            'allowSNS':
+                {'isRequired': False, 'type': bool, 'default': False},
+            'isApproved':
+                {'isRequired': False, 'type': bool, 'default': False},
+            'location':
+                {'isRequired': True, 'type': str, 'default': ''},
+            'message':
+                {'isRequired': True, 'type': str, 'default': ''},
+            'name':
+                {'isRequired': True, 'type': str, 'default': ''}
         }
+
+    def _check_disallowed_fields(self, data):
+        disallowed = sorted([d for d in data if d not in self.fields.keys()])
+        return disallowed
 
     def _check_required_fields(self, data):
         required = [f for f in self.fields if
@@ -24,6 +37,10 @@ class Submission:
         return bad_types
 
     def _validate_data(self, data):
+        disallowed = self._check_disallowed_fields(data)
+        if disallowed:
+            raise ValidationError(f'Not allowed: {", ".join(disallowed)}')
+
         missing = self._check_required_fields(data)
         if missing:
             raise ValidationError(f'Missing: {", ".join(missing)}')

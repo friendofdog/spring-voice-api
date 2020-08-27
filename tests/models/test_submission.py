@@ -3,25 +3,6 @@ from springapi.models import exceptions
 from unittest import mock
 
 
-@mock.patch('springapi.models.submission.Submission._check_required_fields')
-@mock.patch('springapi.models.submission.Submission._check_type')
-class TestDataValidation(SubmissionResponseAssertions):
-
-    def test_validate_data_returns_missing_field_error_message(
-            self, mock_req, mock_type):
-        mock_req.return_value = []
-        fields = mock_type.return_value = ['some_field', 'another_field']
-        self.assert_missing_field_validation_error(fields)
-
-    def test_validate_data_returns_type_check_error_message(
-            self, mock_req, mock_type):
-        field = 'name'
-        bad_value = 10
-        mock_req.return_value = [field]
-        mock_type.return_value = []
-        self.assert_type_validation_error(field, bad_value)
-
-
 @mock.patch('springapi.models.firebase.client.get_collection')
 class TestSubmissionGetAllSubmissions(SubmissionResponseAssertions):
 
@@ -52,8 +33,16 @@ class TestSubmissionGetSingleSubmission(SubmissionResponseAssertions):
 
 class TestSubmissionCreateSubmission(SubmissionResponseAssertions):
 
-    def test_create_submission_raises_ValidationError(self):
+    def test_create_submission_raises_ValidationError_disallowed(self):
+        data = {'name': 'a', 'message': 'b', 'location': 'c', 'd': 'e'}
+        self.assert_create_submission_raises_validation_error(data)
+
+    def test_create_submission_raises_ValidationError_missing(self):
         data = {'name': 'a', 'message': 'b'}
+        self.assert_create_submission_raises_validation_error(data)
+
+    def test_create_submission_raises_ValidationError_type(self):
+        data = {'name': 'a', 'message': 'b', 'location': 10}
         self.assert_create_submission_raises_validation_error(data)
 
     @mock.patch('springapi.models.firebase.client.add_entry')
