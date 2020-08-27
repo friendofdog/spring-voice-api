@@ -9,7 +9,7 @@ test:
 	python3 -m pytest -q
 
 run:
-	set -a && set +a && \
+	@set -a && set +a && \
 	export DATABASE_URI=$(shell python3 -m bin.config $(CONFIG)) && \
 	python3 -m springapi.app
 
