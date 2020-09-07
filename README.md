@@ -17,8 +17,8 @@ Setup
 =====
 
 1. Optional: Set up and activate a virtual environment, like venv or pyenv.
-2. Install dependencies: `pip install -r dependencies.py`.
-3. Install dev dependencies: `pip install -r dependencies-dev.py`.
+2. Install dependencies: `pip install -r dependencies.txt`.
+3. Install dev dependencies: `pip install -r dependencies-dev.txt`.
 4. Acquire service account keys from Google and put it somewhere that can be accessed by this app.*
 5. Configure environment variables (see below).
 
@@ -60,47 +60,103 @@ There are two user roles:
 API Routes
 ----------
 
+The API uses [REST](https://en.wikipedia.org/wiki/Representational_state_transfer). It accepts [JSON-encoded](https://en.wikipedia.org/wiki/JSON#MIME_type) requests (`Content-Type application/json`) and returns JSON-encoded responses. Responses use standard [HTTP response codes](https://en.wikipedia.org/wiki/List_of_HTTP_status_codes). Requests use [HTTP verbs / methods](https://developer.mozilla.org/en-US/docs/Web/HTTP/Methods); allowed methods include `GET`, `POST`, and `PUT`.
+
+### Submissions
+
+Get all submissions
+
 ```
 GET /api/v1/submissions
 
-POST /api/v1/submissions
-Content-type: application/json
-{
-  "name": str,
-  "prefecture": Optional<str>,
-  "message": str,
-  "image_id": Optional<str>,
+... returns ...
+"submissions": {
+    [id]: {
+        "allowSNS": bool,
+        "allowSharing": bool,
+        "isApproved": bool,
+        "message": str,
+        "name": str,
+        "prefecture": str
+    }
 }
 ```
+
+Get single submission
 
 ```
 GET /api/v1/submissions/[id]
 
-PUT /api/v1/submissions/[id]
-Content-type: application/json
+... returns ...
 {
-  "name": str,
-  "prefecture": Optional<str>,
-  "message": str,
-  "image_id": Optional<str>,
-  "approved": Optional<bool> @ADMIN-ONLY,
+    [id]: {
+        "allowSNS": bool,
+        "allowSharing": bool,
+        "isApproved": bool,
+        "message": str,
+        "name": str,
+        "prefecture": str
+    }
+}
+```
+
+Create single submission
+
+```
+POST /api/v1/submissions
+
+... payload ...
+{
+    "allowSNS": bool,
+    "allowSharing": bool,
+    "isApproved": bool,
+    "message": str,
+    "name": str,
+    "prefecture": str
 }
 
-DELETE /api/v1/submissions/[id]
+... returns ...
+{
+    [id]: {
+        "allowSNS": bool,
+        "allowSharing": bool,
+        "isApproved": bool,
+        "message": str,
+        "name": str,
+        "prefecture": str
+    }
+}
+```
 
-... OR ...
-GET /api/v1/submissions/[id]/images
+Update single submission
 
-DELETE /api/v1/submissions/[id]/images/[id]
+```
+PUT /api/v1/submissions/[id]
 
-POST /api/v1/submissions/[id]/images
--- authentication / authorization --
+... payload ...
+{
+    "allowSNS": bool,
+    "allowSharing": bool,
+    "isApproved": bool,
+    "message": str,
+    "name": str,
+    "prefecture": str
+}
+
+... returns ...
+[to be implemented]
+```
+
+### authentication / authorization
+
+Below is yet to be implemented and is (as of 2020-09-07) yet to be fully thought through.
+
+```
 Content-type: multipart/form-data
-
 
 POST /api/v1/users
 {
-    "identifier": "..."
+    "identifier": str
 }
 
 ... return ...
