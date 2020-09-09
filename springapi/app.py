@@ -39,7 +39,7 @@ def create_app(config):
 def main(environ):
     app = create_app(environ)
     create_database_instance(environ)
-    app.run()
+    app.run(host='0.0.0.0')
 
 
 if __name__ == "__main__":
