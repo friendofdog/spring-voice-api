@@ -13,18 +13,17 @@ Requirements
 Using this Application
 ----------------------
 
-Setup
-=====
+### Setup
 
 1. Optional: Set up and activate a virtual environment, like venv or pyenv.
 2. Install dependencies: `pip install -r dependencies.txt`.
 3. Install dev dependencies: `pip install -r dependencies-dev.txt`.
 4. Acquire service account keys from Google and put it somewhere that can be accessed by this app.*
-5. Configure environment variables (see below).
+5. Configure [environment variables](#environment-variables).
 
 \* See [Google Cloud documentation](https://cloud.google.com/iam/docs/creating-managing-service-account-keys) for instructions. There is a sample key in this repo, `sample-config.json`.
 
-### Environment variables
+#### Environment variables
 
 There are three environment variables which govern how the app runs:
 
@@ -32,17 +31,22 @@ There are three environment variables which govern how the app runs:
 2. `DEBUG`: `True` or `False`. Defaults to `True` in development, otherwise `False`.
 3. `DATABASE_URI`: Determines the scheme and configuration for the database. The value should be the path to the aforementioned Google Cloud service account key.
 
-Starting up the app
-===================
+### Starting in development mode
 
 `make run CONFIG=path-to-config` will start the app in development mode. `path-to-config` is wherever you put the Google Cloud service account key.
 
 Once started, you can send HTTP requests to `http://localhost:5000/api/v1/<route>` using curl or a client like Postman. Note that if you've set up Firebase correctly, you are making requests to live resources.
 
-Testing
-=======
+Test, lint, type check
+----------------------
 
-Tests are done in unittest and are initiated by pytest. They can be run using `make test`. `make` will run tests, plus linting and type checking.
+Tests are done in unittest and are initiated by pytest. `make test` will run tests in quiet mode; otherwise, `pytest <options>` can be used to run your own tests.
+
+Linting is handled by `flake8`. `make lint` will lint the application and tests.
+
+Type checking is handled by `mypy`. `make type-check` will type check the application and tests.
+
+`make` will run tests, linting, and type checking in that order. Do this before pushing a commit to Gitlab, as the Gitlab CI will run these operations.
 
 User Roles and Authentication
 -----------------------------
