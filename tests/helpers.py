@@ -84,7 +84,7 @@ class SubmissionResponseAssertions(unittest.TestCase):
 class RouteResponseAssertions(unittest.TestCase):
 
     def _assert_expected_code_and_response(
-            self, method, path, expected_code, body=None, expected_resp=None):
+            self, method, path, expected_code, expected_response, body=None):
         with make_test_client() as client:
             call = getattr(client, method)
             if method in ['post', 'put']:
@@ -93,8 +93,9 @@ class RouteResponseAssertions(unittest.TestCase):
                 r = call(path)
             self.assertEqual(expected_code, r.status)
             response_body = r.get_json()
-            if expected_resp is not None:
-                self.assertEqual(response_body, expected_resp)
+            if expected_response is not None:
+                print(response_body)
+                self.assertEqual(response_body, expected_response)
             self.assertEqual(
                 "application/json", r.headers["Content-type"])
 
@@ -108,30 +109,30 @@ class RouteResponseAssertions(unittest.TestCase):
 
     def assert_post_raises_ok(self, path, body, expected_response=None):
         return self._assert_expected_code_and_response(
-            'post', path, '201 CREATED', json.dumps(body), expected_response)
+            'post', path, '201 CREATED', expected_response, json.dumps(body))
 
     def assert_post_raises_invalid_body(self, path, expected_response=None):
         invalid_body = b'FOOBAR'
         return self._assert_expected_code_and_response(
-            'post', path, '400 BAD REQUEST', invalid_body, expected_response)
+            'post', path, '400 BAD REQUEST', expected_response, invalid_body)
 
     def assert_post_raises_already_exists(
             self, path, body, expected_response=None):
         return self._assert_expected_code_and_response(
-            'post', path, '409 CONFLICT', json.dumps(body), expected_response)
+            'post', path, '409 CONFLICT', expected_response, json.dumps(body))
 
     def assert_put_raises_ok(self, path, body, expected_response=None):
         return self._assert_expected_code_and_response(
-            'put', path, '200 OK', json.dumps(body), expected_response)
+            'put', path, '200 OK', expected_response, json.dumps(body))
 
     def assert_put_raises_not_found(self, path, body, expected_response=None):
         return self._assert_expected_code_and_response(
-            'put', path, '404 NOT FOUND', json.dumps(body), expected_response)
+            'put', path, '404 NOT FOUND', expected_response, json.dumps(body))
 
     def assert_put_raises_invalid_body(self, path, expected_response=None):
         invalid_body = b'FOOBAR'
         return self._assert_expected_code_and_response(
-            'put', path, '400 BAD REQUEST', invalid_body, expected_response)
+            'put', path, '400 BAD REQUEST', expected_response, invalid_body)
 
 
 def populate_mock_submissions(entries):

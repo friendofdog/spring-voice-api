@@ -13,21 +13,33 @@ class TestSubmissionsRouteGetAll(RouteResponseAssertions):
             '/api/v1/submissions', err.error_response_body())
 
     def test_get_all_returns_empty_list(self, mocked):
-        entries = mocked.return_value = {}
+        mocked.return_value = {}
         self.assert_get_raises_ok(
-            '/api/v1/submissions', {'submissions': entries})
+            '/api/v1/submissions', {'submissions': []})
 
     def test_get_all_returns_entries_if_found(self, mocked):
-        entries = mocked.return_value = {
-            "1": {"name": "Some Guy", "message": "Hi there", "location": ""},
+        mocked.return_value = {
+            "1": {
+                "name": "Some Guy",
+                "message": "Hi there",
+                "location": "Here"
+            },
             "2": {
                 "name": "Another Fellow",
                 "message": "Goodbye",
-                "location": ""
+                "location": "There"
             }
         }
+        expected_response = [
+            {'allowSNS': False, 'allowSharing': False, 'id': '1',
+             'isApproved': False, 'location': 'Here', 'message': 'Hi there',
+             'name': 'Some Guy'},
+            {'allowSNS': False, 'allowSharing': False, 'id': '2',
+             'isApproved': False, 'location': 'There', 'message': 'Goodbye',
+             'name': 'Another Fellow'}
+        ]
         self.assert_get_raises_ok(
-            '/api/v1/submissions', {'submissions': entries})
+            '/api/v1/submissions', {'submissions': expected_response})
 
 
 @mock.patch('springapi.models.firebase.client.get_entry')
@@ -44,13 +56,13 @@ class TestSubmissionsRouteGetSingle(RouteResponseAssertions):
         entry_id = 'abc'
         mocked.return_value = {
             'name': 'Guy',
-            'message': '',
+            'message': 'Hi',
             'location': 'There'
         }
         expected = Submission.from_json({
             'id': entry_id,
             'name': 'Guy',
-            'message': '',
+            'message': 'Hi',
             'location': 'There'
         })
         self.assert_get_raises_ok(
