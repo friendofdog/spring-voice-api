@@ -71,6 +71,35 @@ class TestSubmissionGetAllSubmissions(SubmissionResponseAssertions):
             "isApproved": False
         }], [r.to_json() for r in results])
 
+    def test_get_submissions_omits_invalid_entries(self, mock_get):
+        mock_get.return_value = {
+            "1": {
+                "name": "a",
+                "message": "b",
+                "location": "c"
+            },
+            "2": {
+                "name": "one",
+                "message": "two",
+                "location": "three",
+                "bad_field": "invalid"
+            },
+            "3": {
+                "name": "missing",
+                "message": "location"
+            }
+        }
+        results = Submission.get_submissions()
+        self.assertEqual([{
+            "id": "1",
+            "name": "a",
+            "message": "b",
+            "location": "c",
+            "allowSNS": False,
+            "allowSharing": False,
+            "isApproved": False
+        }], [r.to_json() for r in results])
+
 
 @mock.patch('springapi.models.firebase.client.get_entry')
 class TestSubmissionGetSingleSubmission(SubmissionResponseAssertions):

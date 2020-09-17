@@ -105,7 +105,10 @@ class Submission:
         submissions = []
         for result_id, result in response.items():
             result["id"] = result_id
-            submissions.append(Submission.from_json(result))
+            try:
+                submissions.append(Submission.from_json(result))
+            except ValidationError:
+                continue
         return submissions
 
     @classmethod

@@ -19,27 +19,77 @@ class TestSubmissionsRouteGetAll(RouteResponseAssertions):
 
     def test_get_all_returns_entries_if_found(self, mocked):
         mocked.return_value = {
-            "1": {
+            "abc": {
                 "name": "Some Guy",
                 "message": "Hi there",
                 "location": "Here"
             },
-            "2": {
+            "def": {
                 "name": "Another Fellow",
                 "message": "Goodbye",
                 "location": "There"
             }
         }
-        expected_response = [
-            {'allowSNS': False, 'allowSharing': False, 'id': '1',
-             'isApproved': False, 'location': 'Here', 'message': 'Hi there',
-             'name': 'Some Guy'},
-            {'allowSNS': False, 'allowSharing': False, 'id': '2',
-             'isApproved': False, 'location': 'There', 'message': 'Goodbye',
-             'name': 'Another Fellow'}
+        expected = [
+            Submission.from_json({
+                "id": "abc",
+                "name": "Some Guy",
+                "message": "Hi there",
+                "location": "Here"
+            }).to_json(),
+            Submission.from_json({
+                "id": "def",
+                "name": "Another Fellow",
+                "message": "Goodbye",
+                "location": "There"
+            }).to_json()
         ]
         self.assert_get_raises_ok(
-            '/api/v1/submissions', {'submissions': expected_response})
+            '/api/v1/submissions', {'submissions': expected})
+
+    def test_get_all_omits_entries_with_required_field_missing(self, mocked):
+        mocked.return_value = {
+            "abc": {
+                "name": "Some Guy",
+                "message": "Hi there",
+                "location": "There"
+            },
+            "def": {
+                "name": "Another Fellow",
+                "message": "Goodbye"
+            }
+        }
+        expected = Submission.from_json({
+            "id": "abc",
+            "name": "Some Guy",
+            "message": "Hi there",
+            "location": "There"
+        }).to_json()
+        self.assert_get_raises_ok(
+            '/api/v1/submissions', {'submissions': [expected]})
+
+    def test_get_all_omits_entries_with_invalid_field(self, mocked):
+        mocked.return_value = {
+            "abc": {
+                "name": "Some Guy",
+                "message": "Hi there",
+                "location": "There"
+            },
+            "def": {
+                "name": "Another Fellow",
+                "message": "Goodbye",
+                "location": "There",
+                "bad_field": "invalid"
+            }
+        }
+        expected = Submission.from_json({
+            "id": "abc",
+            "name": "Some Guy",
+            "message": "Hi there",
+            "location": "There"
+        }).to_json()
+        self.assert_get_raises_ok(
+            '/api/v1/submissions', {'submissions': [expected]})
 
 
 @mock.patch('springapi.models.firebase.client.get_entry')
