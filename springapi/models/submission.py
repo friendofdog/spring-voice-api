@@ -115,7 +115,11 @@ class Submission:
     def get_submission(cls, entry_id: str) -> "Submission":
         response = client.get_entry(COLLECTION, entry_id)
         response["id"] = entry_id
-        return Submission.from_json(response)
+        try:
+            submission = Submission.from_json(response)
+        except ValidationError as err:
+            raise ValueError(err)
+        return submission
 
     @classmethod
     def create_submission(cls, data: Dict[str, Any]) -> "Submission":

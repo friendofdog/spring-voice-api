@@ -107,6 +107,10 @@ class RouteResponseAssertions(unittest.TestCase):
         return self._assert_expected_code_and_response(
             'get', path, '404 NOT FOUND', expected_response)
 
+    def assert_get_raises_invalid_body(self, path, expected_response=None):
+        return self._assert_expected_code_and_response(
+            'get', path, '400 BAD REQUEST', expected_response)
+
     def assert_post_raises_ok(self, path, body, expected_response=None):
         return self._assert_expected_code_and_response(
             'post', path, '201 CREATED', expected_response, json.dumps(body))

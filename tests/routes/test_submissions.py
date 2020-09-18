@@ -117,6 +117,31 @@ class TestSubmissionsRouteGetSingle(RouteResponseAssertions):
         })
         self.assert_get_raises_ok(
             f'/api/v1/submissions/{entry_id}', expected.to_json())
+        mocked.assert_called_with("submissions", entry_id)
+
+    def test_get_single_returns_error_if_disallowed_field(self, mocked):
+        entry_id = 'abc'
+        mocked.return_value = {
+            'name': 'Guy',
+            'message': 'Hi',
+            'location': 'There',
+            'bad_field': 'not allowed'
+        }
+        expected = {'error': 'abc contains data which has failed validation - '
+                             'Not allowed: bad_field'}
+        self.assert_get_raises_invalid_body(
+            f'/api/v1/submissions/{entry_id}', expected)
+
+    def test_get_single_returns_error_if_missing_required_field(self, mocked):
+        entry_id = 'abc'
+        mocked.return_value = {
+            'name': 'Guy',
+            'message': 'Hi'
+        }
+        expected = {'error': 'abc contains data which has failed validation - '
+                             'Missing: location'}
+        self.assert_get_raises_invalid_body(
+            f'/api/v1/submissions/{entry_id}', expected)
 
 
 @mock.patch('springapi.models.firebase.client.add_entry')

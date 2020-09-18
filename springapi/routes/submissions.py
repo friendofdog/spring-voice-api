@@ -12,7 +12,13 @@ def get_all():
 
 @route(f"/api/{VERSION}/submissions/<entry_id>", methods=['GET'])
 def get_single(entry_id):
-    submission = Submission.get_submission(entry_id)
+    try:
+        submission = Submission.get_submission(entry_id)
+    except ValueError as err:
+        return {
+            "error": f"{entry_id} contains data which has failed validation - "
+                     f"{err}"
+        }, 400
     return submission.to_json(), 200
 
 
