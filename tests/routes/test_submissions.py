@@ -7,16 +7,6 @@ from unittest import mock
 @mock.patch('springapi.models.firebase.client.get_collection')
 class TestSubmissionsRouteGetAll(RouteResponseAssertions):
 
-    def test_get_all_returns_not_found(self, mocked):
-        err = mocked.side_effect = exceptions.CollectionNotFound('submissions')
-        self.assert_get_raises_not_found(
-            '/api/v1/submissions', err.error_response_body())
-
-    def test_get_all_returns_empty_list(self, mocked):
-        mocked.return_value = {}
-        self.assert_get_raises_ok(
-            '/api/v1/submissions', {'submissions': []})
-
     def test_get_all_returns_entries_if_found(self, mocked):
         mocked.return_value = {
             "abc": {
@@ -46,6 +36,13 @@ class TestSubmissionsRouteGetAll(RouteResponseAssertions):
         ]
         self.assert_get_raises_ok(
             '/api/v1/submissions', {'submissions': expected})
+        mocked.assert_called_with('submissions')
+
+    def test_get_all_returns_empty_list(self, mocked):
+        mocked.return_value = {}
+        self.assert_get_raises_ok(
+            '/api/v1/submissions', {'submissions': []})
+        mocked.assert_called_with('submissions')
 
     def test_get_all_omits_entries_with_required_field_missing(self, mocked):
         mocked.return_value = {
@@ -67,6 +64,12 @@ class TestSubmissionsRouteGetAll(RouteResponseAssertions):
         }).to_json()
         self.assert_get_raises_ok(
             '/api/v1/submissions', {'submissions': [expected]})
+        mocked.assert_called_with('submissions')
+
+    def test_get_all_returns_not_found(self, mocked):
+        err = mocked.side_effect = exceptions.CollectionNotFound('submissions')
+        self.assert_get_raises_not_found(
+            '/api/v1/submissions', err.error_response_body())
 
     def test_get_all_omits_entries_with_invalid_field(self, mocked):
         mocked.return_value = {
@@ -90,17 +93,11 @@ class TestSubmissionsRouteGetAll(RouteResponseAssertions):
         }).to_json()
         self.assert_get_raises_ok(
             '/api/v1/submissions', {'submissions': [expected]})
+        mocked.assert_called_with('submissions')
 
 
 @mock.patch('springapi.models.firebase.client.get_entry')
 class TestSubmissionsRouteGetSingle(RouteResponseAssertions):
-
-    def test_get_single_returns_not_found(self, mocked):
-        entry_id = 'abc'
-        err = mocked.side_effect = exceptions.EntryNotFound(
-            entry_id, 'submissions')
-        self.assert_get_raises_not_found(
-            f'/api/v1/submissions/{entry_id}', err.error_response_body())
 
     def test_get_single_returns_entry_if_found(self, mocked):
         entry_id = 'abc'
@@ -118,6 +115,13 @@ class TestSubmissionsRouteGetSingle(RouteResponseAssertions):
         self.assert_get_raises_ok(
             f'/api/v1/submissions/{entry_id}', expected.to_json())
         mocked.assert_called_with("submissions", entry_id)
+
+    def test_get_single_returns_not_found(self, mocked):
+        entry_id = 'abc'
+        err = mocked.side_effect = exceptions.EntryNotFound(
+            entry_id, 'submissions')
+        self.assert_get_raises_not_found(
+            f'/api/v1/submissions/{entry_id}', err.error_response_body())
 
     def test_get_single_returns_error_if_disallowed_field(self, mocked):
         entry_id = 'abc'
@@ -147,6 +151,19 @@ class TestSubmissionsRouteGetSingle(RouteResponseAssertions):
 @mock.patch('springapi.models.firebase.client.add_entry')
 class TestSubmissionsRouteCreate(RouteResponseAssertions):
 
+    def test_create_single_returns_created_on_success(self, mocked):
+        data = {
+            "id": "abc",
+            "name": "b",
+            "message": "b",
+            "location": "b",
+        }
+        mocked.return_value = {'abc': data}
+
+        expected = Submission.from_json(data).to_json()
+        self.assert_post_raises_ok('/api/v1/submissions', data, expected)
+        mocked.assert_called_with("submissions", expected)
+
     def test_create_single_returns_conflict_if_already_exists(self, mocked):
         err = mocked.side_effect = exceptions.EntryAlreadyExists(
             'abc', 'submissions')
@@ -164,22 +181,23 @@ class TestSubmissionsRouteCreate(RouteResponseAssertions):
         self.assert_post_raises_invalid_body(
             '/api/v1/submissions', err.error_response_body())
 
-    def test_create_single_returns_created_on_success(self, mocked):
-        data = {
-            "id": "abc",
-            "name": "b",
-            "message": "b",
-            "location": "b",
-        }
-        mocked.return_value = {'abc': data}
-
-        expected = Submission.from_json(data).to_json()
-        self.assert_post_raises_ok('/api/v1/submissions', data, expected)
-        mocked.assert_called_with("submissions", expected)
-
 
 @mock.patch('springapi.models.firebase.client.update_entry')
 class TestSubmissionsRouteUpdate(RouteResponseAssertions):
+
+    def test_update_single_returns_ok_on_success(self, mocked):
+        entry_id = 'abc'
+        data = {
+            "id": entry_id,
+            "name": "b",
+            "location": "b",
+            "message": "b"
+        }
+        mocked.return_value = {entry_id: data}
+        expected = Submission.from_json(data).to_json()
+        self.assert_put_raises_ok(
+            f'/api/v1/submissions/{entry_id}', data, expected)
+        mocked.assert_called_with("submissions", expected, entry_id)
 
     def test_update_single_returns_not_found(self, mocked):
         entry_id = 'abc'
@@ -201,17 +219,3 @@ class TestSubmissionsRouteUpdate(RouteResponseAssertions):
             f'/api/v1/submissions/{entry_id}',
             err.error_response_body()
         )
-
-    def test_update_single_returns_ok_on_success(self, mocked):
-        entry_id = 'abc'
-        data = {
-            "id": entry_id,
-            "name": "b",
-            "location": "b",
-            "message": "b"
-        }
-        mocked.return_value = {entry_id: data}
-        expected = Submission.from_json(data).to_json()
-        self.assert_put_raises_ok(
-            f'/api/v1/submissions/{entry_id}', data, expected)
-        mocked.assert_called_with("submissions", expected, entry_id)
