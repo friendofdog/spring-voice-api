@@ -172,8 +172,8 @@ class TestSubmissionCreateSubmission(SubmissionResponseAssertions):
 class TestSubmissionUpdateSubmission(SubmissionResponseAssertions):
 
     @mock.patch('springapi.models.firebase.client.update_entry')
-    def test_update_submission_returns_submission_data_if_found_and_valid(
-            self, mock_update):
+    def test_update_submission_returns_success_if_found_and_valid(
+            self, mocked):
         entry_id = 'abc'
         data = {
             'id': entry_id,
@@ -181,9 +181,9 @@ class TestSubmissionUpdateSubmission(SubmissionResponseAssertions):
             'location': 'b',
             'message': 'new message'
         }
-        mock_update.return_value = {entry_id: data}
-        self.assert_update_submission_returns_success(entry_id, data)
-        mock_update.assert_called_with("submissions", data, entry_id)
+        expected = mocked.return_value = {'success': f'{entry_id} updated'}
+        self.assert_update_submission_returns_success(entry_id, data, expected)
+        mocked.assert_called_with("submissions", data, entry_id)
 
     @mock.patch('springapi.models.firebase.client.update_entry')
     def test_update_submission_raises_EntryNotFound(

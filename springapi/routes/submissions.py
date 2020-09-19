@@ -37,4 +37,4 @@ def update_single(entry_id):
         request_data = json.loads(request.data)
     except ValueError:
         return {"error": "Invalid JSON"}, 400
-    return Submission.update_submission(entry_id, request_data).to_json(), 200
+    return Submission.update_submission(entry_id, request_data), 200

@@ -75,10 +75,10 @@ class SubmissionResponseAssertions(unittest.TestCase):
         with self._assert_expected_exception_and_error(exception, err):
             Submission.update_submission(entry_id, data)
 
-    def assert_update_submission_returns_success(self, entry_id, data):
+    def assert_update_submission_returns_success(
+            self, entry_id, data, expected):
         self.assertEqual(
-            Submission.from_json(data),
-            Submission.update_submission(entry_id, data))
+            expected, Submission.update_submission(entry_id, data))
 
 
 class RouteResponseAssertions(unittest.TestCase):

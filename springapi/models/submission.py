@@ -138,4 +138,4 @@ class Submission:
         data = _set_defaults(data)
 
         response = client.update_entry(COLLECTION, data, entry_id)
-        return Submission.from_json(response[entry_id])
+        return response

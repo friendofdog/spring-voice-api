@@ -185,7 +185,7 @@ class TestSubmissionsRouteCreate(RouteResponseAssertions):
 @mock.patch('springapi.models.firebase.client.update_entry')
 class TestSubmissionsRouteUpdate(RouteResponseAssertions):
 
-    def test_update_single_returns_ok_on_success(self, mocked):
+    def test_update_single_returns_success(self, mocked):
         entry_id = 'abc'
         data = {
             "id": entry_id,
@@ -193,11 +193,11 @@ class TestSubmissionsRouteUpdate(RouteResponseAssertions):
             "location": "b",
             "message": "b"
         }
-        mocked.return_value = {entry_id: data}
-        expected = Submission.from_json(data).to_json()
+        expected = mocked.return_value = {'success': f'{entry_id} updated'}
         self.assert_put_raises_ok(
             f'/api/v1/submissions/{entry_id}', data, expected)
-        mocked.assert_called_with("submissions", expected, entry_id)
+        mocked.assert_called_with(
+            "submissions", Submission.from_json(data).to_json(), entry_id)
 
     def test_update_single_returns_not_found(self, mocked):
         entry_id = 'abc'

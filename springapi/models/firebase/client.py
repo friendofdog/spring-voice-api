@@ -40,6 +40,6 @@ def update_entry(collection, data, entry_id):
     client = firestore.client()
     try:
         client.collection(collection).document(entry_id).update(data)
-        return f'{entry_id} updated'
+        return {'success': f'{entry_id} updated'}
     except google_exceptions.NotFound:
         raise EntryNotFound(entry_id, collection)

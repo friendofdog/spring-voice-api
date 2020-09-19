@@ -83,7 +83,7 @@ class TestFirebaseCalls(unittest.TestCase):
         data = {"message": "Ohayo"}
 
         response = update_entry('submissions', data, entry_id)
-        self.assertEqual(response, f'{entry_id} updated')
+        self.assertEqual(response, {'success': f'{entry_id} updated'})
 
     def test_update_entry_raises_EntryNotFound(self, mock_client):
         mock_client.return_value = populate_mock_submissions(self.entries)
