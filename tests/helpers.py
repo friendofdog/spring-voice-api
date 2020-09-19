@@ -53,13 +53,11 @@ class SubmissionResponseAssertions(unittest.TestCase):
     def assert_create_submission_raises_already_exists(self, entry_id, data):
         exception = exceptions.EntryAlreadyExists
         err = {'error': f'{entry_id} already exists in submissions'}
-        data["id"] = entry_id
         with self._assert_expected_exception_and_error(exception, err):
             Submission.create_submission(data)
 
-    def assert_create_submission_returns_success(self, entry_id, data):
+    def assert_create_submission_returns_success(self, data):
         result = Submission.create_submission(data)
-        data["id"] = entry_id
         expected = Submission.from_json(data)
         self.assertEqual(expected, result)
 

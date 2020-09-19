@@ -152,27 +152,17 @@ class TestSubmissionsRouteGetSingle(RouteResponseAssertions):
 class TestSubmissionsRouteCreate(RouteResponseAssertions):
 
     def test_create_single_returns_created_on_success(self, mocked):
-        data = {
-            "id": "abc",
-            "name": "b",
-            "message": "b",
-            "location": "b",
-        }
+        data = {"id": "abc", "name": "a", "message": "b", "location": "c"}
         mocked.return_value = {'abc': data}
 
         expected = Submission.from_json(data).to_json()
         self.assert_post_raises_ok('/api/v1/submissions', data, expected)
         mocked.assert_called_with("submissions", expected)
 
-    def test_create_single_returns_conflict_if_already_exists(self, mocked):
+    def test_create_single_raises_EntryAlreadyExists(self, mocked):
         err = mocked.side_effect = exceptions.EntryAlreadyExists(
             'abc', 'submissions')
-        body = {
-            "id": "abc",
-            "name": "a",
-            "message": "b",
-            "location": "c"
-        }
+        body = {"id": "abc", "name": "a", "message": "b", "location": "c"}
         self.assert_post_raises_already_exists(
             '/api/v1/submissions', body, err.error_response_body())
 
@@ -187,12 +177,7 @@ class TestSubmissionsRouteUpdate(RouteResponseAssertions):
 
     def test_update_single_returns_success(self, mocked):
         entry_id = 'abc'
-        data = {
-            "id": entry_id,
-            "name": "b",
-            "location": "b",
-            "message": "b"
-        }
+        data = {"id": entry_id, "name": "b", "location": "b", "message": "b"}
         expected = mocked.return_value = {'success': f'{entry_id} updated'}
         self.assert_put_raises_ok(
             f'/api/v1/submissions/{entry_id}', data, expected)
@@ -201,12 +186,7 @@ class TestSubmissionsRouteUpdate(RouteResponseAssertions):
 
     def test_update_single_returns_not_found(self, mocked):
         entry_id = 'abc'
-        body = {
-            "id": entry_id,
-            "name": "",
-            "location": "",
-            "message": ""
-        }
+        body = {"id": entry_id, "name": "", "location": "", "message": ""}
         err = mocked.side_effect = exceptions.EntryNotFound(
             entry_id, 'submissions')
         self.assert_put_raises_not_found(

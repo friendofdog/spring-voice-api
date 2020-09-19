@@ -144,26 +144,27 @@ class TestSubmissionCreateSubmission(SubmissionResponseAssertions):
         entry_id = 'abc'
         data = {'id': entry_id, 'name': 'a', 'location': 'b', 'message': 'c'}
         mock_add.return_value = {entry_id: data}
-        self.assert_create_submission_returns_success(entry_id, data)
+        self.assert_create_submission_returns_success(data)
         mock_add.assert_called_with("submissions", data)
 
     def test_create_submission_raises_ValidationError_disallowed(self):
-        data = {'name': 'a', 'message': 'b', 'location': 'c', 'd': 'e'}
+        data = {'id': 'abc', 'name': 'a', 'message': 'b',
+                'location': 'c', 'bad_field': 'not allowed'}
         self.assert_create_submission_raises_validation_error(data)
 
     def test_create_submission_raises_ValidationError_missing(self):
-        data = {'name': 'a', 'message': 'b'}
+        data = {'id': 'abc', 'name': 'a', 'message': 'b'}
         self.assert_create_submission_raises_validation_error(data)
 
     def test_create_submission_raises_ValidationError_type(self):
-        data = {'name': 'a', 'message': 'b', 'location': 10}
+        data = {'id': 'abc', 'name': 'a', 'message': 'b', 'location': 10}
         self.assert_create_submission_raises_validation_error(data)
 
     @mock.patch('springapi.models.firebase.client.add_entry')
     def test_create_submission_raises_EntryAlreadyExists(
             self, mock_add):
         entry_id = 'abc'
-        data = {'name': 'a', 'location': 'b', 'message': 'c'}
+        data = {'id': entry_id, 'name': 'a', 'location': 'b', 'message': 'c'}
         mock_add.side_effect = exceptions.EntryAlreadyExists(
             entry_id, 'submissions')
         self.assert_create_submission_raises_already_exists(entry_id, data)

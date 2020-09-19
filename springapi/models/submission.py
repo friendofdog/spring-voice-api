@@ -126,7 +126,7 @@ class Submission:
         _validate_data(data)
         data = _set_defaults(data)
 
-        response = client.add_entry(COLLECTION, data)
+        response = client.add_entry(COLLECTION, data.copy())
         result = response[data["id"]]
         result.setdefault("id", data["id"])
         return Submission.from_json(result)
@@ -137,5 +137,5 @@ class Submission:
         _validate_data(data)
         data = _set_defaults(data)
 
-        response = client.update_entry(COLLECTION, data, entry_id)
+        response = client.update_entry(COLLECTION, data.copy(), entry_id)
         return response
