@@ -1,3 +1,5 @@
+import base64
+import uuid
 import springapi.models.firebase.client as client
 from springapi.models.exceptions import ValidationError
 from typing import Dict, List, Any
@@ -14,6 +16,13 @@ FIELDS = {
     'name': {'isRequired': True, 'type': str, 'default': ''},
     'id': {'isRequired': True, 'type': str, 'default': ''}
 }
+
+
+def _create_uid():
+    raw_uid = uuid.uuid4().bytes
+    uid_base32 = \
+        base64.b32encode(raw_uid).decode('ascii').rsplit("=")[0].lower()
+    return uid_base32
 
 
 def _set_defaults(data: Dict[str, Any]) -> Dict[str, Any]:
@@ -123,6 +132,7 @@ class Submission:
 
     @classmethod
     def create_submission(cls, data: Dict[str, Any]) -> "Submission":
+        data["id"] = _create_uid()
         _validate_data(data)
         data = _set_defaults(data)
 
@@ -134,6 +144,7 @@ class Submission:
     @classmethod
     def update_submission(
             cls, entry_id: str, data: Dict[str, Any]) -> "Submission":
+        data["id"] = entry_id
         _validate_data(data)
         data = _set_defaults(data)
 

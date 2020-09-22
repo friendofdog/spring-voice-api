@@ -136,34 +136,39 @@ class TestSubmissionGetSingleSubmission(SubmissionResponseAssertions):
         self.assert_get_single_submission_raises_not_found(entry_id)
 
 
+@mock.patch('springapi.models.submission._create_uid')
 class TestSubmissionCreateSubmission(SubmissionResponseAssertions):
 
     @mock.patch('springapi.models.firebase.client.add_entry')
     def test_create_submission_returns_submission_if_valid(
-            self, mock_add):
-        entry_id = 'abc'
-        data = {'id': entry_id, 'name': 'a', 'location': 'b', 'message': 'c'}
+            self, mock_add, mock_id):
+        entry_id = mock_id.return_value = 'abc'
+        data = {'name': 'a', 'location': 'b', 'message': 'c'}
         mock_add.return_value = {entry_id: data}
         self.assert_create_submission_returns_success(data)
         mock_add.assert_called_with("submissions", data)
 
-    def test_create_submission_raises_ValidationError_disallowed(self):
-        data = {'id': 'abc', 'name': 'a', 'message': 'b',
+    def test_create_submission_raises_ValidationError_disallowed(
+            self, mock_id):
+        entry_id = mock_id.return_value = 'abc'
+        data = {'id': entry_id, 'name': 'a', 'message': 'b',
                 'location': 'c', 'bad_field': 'not allowed'}
         self.assert_create_submission_raises_validation_error(data)
 
-    def test_create_submission_raises_ValidationError_missing(self):
-        data = {'id': 'abc', 'name': 'a', 'message': 'b'}
+    def test_create_submission_raises_ValidationError_missing(self, mock_id):
+        entry_id = mock_id.return_value = 'abc'
+        data = {'id': entry_id, 'name': 'a', 'message': 'b'}
         self.assert_create_submission_raises_validation_error(data)
 
-    def test_create_submission_raises_ValidationError_type(self):
-        data = {'id': 'abc', 'name': 'a', 'message': 'b', 'location': 10}
+    def test_create_submission_raises_ValidationError_type(self, mock_id):
+        entry_id = mock_id.return_value = 'abc'
+        data = {'id': entry_id, 'name': 'a', 'message': 'b', 'location': 10}
         self.assert_create_submission_raises_validation_error(data)
 
     @mock.patch('springapi.models.firebase.client.add_entry')
     def test_create_submission_raises_EntryAlreadyExists(
-            self, mock_add):
-        entry_id = 'abc'
+            self, mock_add, mock_id):
+        entry_id = mock_id.return_value = 'abc'
         data = {'id': entry_id, 'name': 'a', 'location': 'b', 'message': 'c'}
         mock_add.side_effect = exceptions.EntryAlreadyExists(
             entry_id, 'submissions')
@@ -176,12 +181,7 @@ class TestSubmissionUpdateSubmission(SubmissionResponseAssertions):
     def test_update_submission_returns_success_if_found_and_valid(
             self, mocked):
         entry_id = 'abc'
-        data = {
-            'id': entry_id,
-            'name': 'a',
-            'location': 'b',
-            'message': 'new message'
-        }
+        data = {'name': 'a', 'location': 'b', 'message': 'new message'}
         expected = mocked.return_value = {'success': f'{entry_id} updated'}
         self.assert_update_submission_returns_success(entry_id, data, expected)
         mocked.assert_called_with("submissions", data, entry_id)
@@ -190,16 +190,11 @@ class TestSubmissionUpdateSubmission(SubmissionResponseAssertions):
     def test_update_submission_raises_EntryNotFound(
             self, mock_update):
         entry_id = 'abc'
-        data = {
-            'id': entry_id,
-            'name': 'a',
-            'location': 'b',
-            'message': 'new message'
-        }
+        data = {'name': 'a', 'location': 'b', 'message': 'new message'}
         mock_update.side_effect = exceptions.EntryNotFound(entry_id, 'def')
         self.assert_update_submission_raises_not_found(entry_id, data)
 
     def test_update_submission_raises_ValidationError(self):
         entry_id = 'abc'
-        data = {'id': entry_id, 'name': 'a', 'message': 'new message'}
+        data = {'name': 'a', 'message': 'new message'}
         self.assert_update_submission_raises_validation_error(entry_id, data)
