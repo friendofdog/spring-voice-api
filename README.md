@@ -68,16 +68,22 @@ The API uses [REST](https://en.wikipedia.org/wiki/Representational_state_transfe
 
 ### Submissions
 
-Get all submissions
+#### Get all submissions
 
-```
+Request:
+
+```shell script
 GET /api/v1/submissions
+```
 
-... returns ...
+Returns:
+
+```json
 "submissions": {
     [id]: {
         "allowSNS": bool,
         "allowSharing": bool,
+        "id": str,
         "isApproved": bool,
         "message": str,
         "name": str,
@@ -86,16 +92,22 @@ GET /api/v1/submissions
 }
 ```
 
-Get single submission
+#### Get single submission
 
-```
+Request:
+
+```shell script
 GET /api/v1/submissions/[id]
+```
 
-... returns ...
+Returns:
+
+```json
 {
     [id]: {
         "allowSNS": bool,
         "allowSharing": bool,
+        "id": str,
         "isApproved": bool,
         "message": str,
         "name": str,
@@ -104,12 +116,17 @@ GET /api/v1/submissions/[id]
 }
 ```
 
-Create single submission
+#### Create single submission
 
-```
+Request:
+
+```shell script
 POST /api/v1/submissions
+```
 
-... payload ...
+Payload:
+
+```json
 {
     "allowSNS": bool,
     "allowSharing": bool,
@@ -118,12 +135,16 @@ POST /api/v1/submissions
     "name": str,
     "prefecture": str
 }
+```
 
-... returns ...
+Returns:
+
+```json
 {
     [id]: {
         "allowSNS": bool,
         "allowSharing": bool,
+        "id": str,
         "isApproved": bool,
         "message": str,
         "name": str,
@@ -132,12 +153,17 @@ POST /api/v1/submissions
 }
 ```
 
-Update single submission
+#### Update single submission
 
-```
+Request:
+
+```shell script
 PUT /api/v1/submissions/[id]
+```
 
-... payload ...
+Payload:
+
+```json
 {
     "allowSNS": bool,
     "allowSharing": bool,
@@ -146,30 +172,44 @@ PUT /api/v1/submissions/[id]
     "name": str,
     "prefecture": str
 }
+```
 
-... returns ...
-[to be implemented]
+Returns:
+
+```json
+{
+    "success": "[id] updated in submissions"
+}
 ```
 
 ### authentication / authorization
 
 Below is yet to be implemented and is (as of 2020-09-07) yet to be fully thought through.
 
-```
+Request:
+
+```shell script
 Content-type: multipart/form-data
 
 POST /api/v1/users
+```
+
+Payload:
+
+```json
 {
     "identifier": str
 }
+```
 
-... return ...
+Return:
+
+```json
 {
     "token": <TokenValue>,
     "expires": int,
     "expires_in": int
 }
-
 ```
 
 Internal Resources
