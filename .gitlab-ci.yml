@@ -1,25 +1,39 @@
 image: python:3.7
 
+services:
+  - docker:dind
+
+before_script:
+  - python3 -m pip install awscli
+  - python3 -m pip install -r requirements.txt
+  - python3 -m pip install -r requirements-dev.txt
+
 stages:
   - test
+  - build
 
 run_tests:
   stage: test
   script:
-    - python3 -m pip install -r requirements.txt
-    - python3 -m pip install -r requirements-dev.txt
     - make test
 
 run_linter:
   stage: test
   script:
-    - python3 -m pip install -r requirements.txt
-    - python3 -m pip install -r requirements-dev.txt
     - make lint
 
 run_type_check:
   stage: test
   script:
-    - python3 -m pip install -r requirements.txt
-    - python3 -m pip install -r requirements-dev.txt
     - make type-check
+
+build:
+  stage: build
+  script:
+    - $(aws ecr get-login --no-include-email)
+    - docker build -t $REPOSITORY_URL .
+    - docker push $REPOSITORY_URL
+  only:
+    - primary
+  tags:
+    - docker
