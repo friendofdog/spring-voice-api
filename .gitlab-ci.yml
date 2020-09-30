@@ -19,12 +19,15 @@ build:
   services:
     - docker:dind
   before_script:
-    - apk add --update --no-cache python3
-    - apk add --update --no-cache py3-pip
+    - apk add --update --no-cache python3 py3-pip
     - pip install awscli
   script:
     - $(aws ecr get-login --no-include-email)
-    - docker build -t $REPOSITORY_URL:$CI_COMMIT_SHORT_SHA -t $REPOSITORY_URL:latest .
+    - TAG="${CI_COMMIT_BRANCH}-${CI_COMMIT_SHORT_SHA}-${CI_JOB_ID}"
+    - docker build
+      -t $REPOSITORY_URL:$TAG
+      -t $REPOSITORY_URL:latest
+      .
     - docker push $REPOSITORY_URL
   only:
     - primary
