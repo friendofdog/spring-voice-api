@@ -1,3 +1,4 @@
+import json
 from springapi.helpers import route, VERSION
 from springapi.models.submission import Submission
 from flask import request
@@ -5,27 +6,35 @@ from flask import request
 
 @route(f"/api/{VERSION}/submissions", methods=['GET'])
 def get_all():
-    submission = Submission()
-    submissions = submission.get_submissions()
+    submissions = [s.to_json() for s in Submission.get_submissions()]
     return {"submissions": submissions}, 200
 
 
 @route(f"/api/{VERSION}/submissions/<entry_id>", methods=['GET'])
 def get_single(entry_id):
-    submission = Submission()
-    data = submission.get_submission(entry_id)
-    return {entry_id: data}, 200
+    try:
+        submission = Submission.get_submission(entry_id)
+    except ValueError as err:
+        return {
+            "error": f"{entry_id} contains data which has failed validation - "
+                     f"{err}"
+        }, 400
+    return submission.to_json(), 200
 
 
 @route(f"/api/{VERSION}/submissions", methods=['POST'])
 def create_single():
-    request_data = request.args.to_dict()
-    submission = Submission()
-    return submission.create_submission(request_data), 201
+    try:
+        request_data = json.loads(request.data)
+    except ValueError:
+        return {"error": "Invalid JSON"}, 400
+    return Submission.create_submission(request_data).to_json(), 201
 
 
 @route(f"/api/{VERSION}/submissions/<entry_id>", methods=['PUT'])
 def update_single(entry_id):
-    data = request.args.to_dict()
-    submission = Submission()
-    return submission.update_submission(entry_id, data), 200
+    try:
+        request_data = json.loads(request.data)
+    except ValueError:
+        return {"error": "Invalid JSON"}, 400
+    return Submission.update_submission(entry_id, request_data), 200

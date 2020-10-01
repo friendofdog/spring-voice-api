@@ -35,3 +35,4 @@ class TestSpringapiAppCreation(unittest.TestCase):
 
         response = create_database_instance(config)
         self.assertEqual(response, auth)
+        mocked.assert_called_with(f'{scheme}://ImFiY2RlIg==')

@@ -1,7 +1,7 @@
 import unittest
 from mockfirestore import MockFirestore
 from springapi.models.exceptions import \
-    CollectionNotFound, EntryAlreadyExists, EntryNotFound
+    CollectionNotFound, EntryAlreadyExists, EntryNotFound, ValidationError
 from springapi.models.firebase.client \
     import get_collection, get_entry, add_entry, update_entry
 from tests.helpers import populate_mock_submissions
@@ -57,20 +57,33 @@ class TestFirebaseCalls(unittest.TestCase):
         self.assertEqual(response, self.entries['1'])
 
     def test_add_entry_returns_entry_data_if_successful(self, mock_client):
+        mock_client.return_value = MockFirestore()
+
+        entry_id = "abc123"
+        data = {"name": "This Person", "message": "Ohayo", "id": entry_id}
+        response = add_entry("submissions", data.copy())
+
+        self.assertEqual(
+            response, {entry_id: data})
+
+    def test_add_entry_raises_ValidationError_if_id_missing(self, mock_client):
         data = {"name": "This Person", "message": "Ohayo"}
         mock_client.return_value = MockFirestore()
 
-        response = add_entry('submissions', data)
-        key = list(response.keys())[0]
-        self.assertEqual(response[key], data)
+        with self.assertRaises(ValidationError) as err:
+            add_entry("submissions", data)
+
+        self.assertEqual(str(err.exception), "Entry ID missing")
 
     def test_add_entry_raises_EntryAlreadyExists(self, mock_client):
         mock_client.return_value = populate_mock_submissions(self.entries)
-        entry_id = '1'
-        collection = 'submissions'
+
+        entry_id = "1"
+        data = {"name": "This Person", "message": "Ohayo", "id": entry_id}
+        collection = "submissions"
 
         with self.assertRaises(EntryAlreadyExists) as context:
-            add_entry(collection, {}, entry_id)
+            add_entry(collection, data)
 
         self.assertEqual(
             context.exception.error_response_body(),
@@ -79,16 +92,17 @@ class TestFirebaseCalls(unittest.TestCase):
 
     def test_update_entry_returns_entry_data_if_successful(self, mock_client):
         mock_client.return_value = populate_mock_submissions(self.entries)
-        entry_id = '1'
+        entry_id = "1"
         data = {"message": "Ohayo"}
 
         response = update_entry('submissions', data, entry_id)
-        self.assertEqual(response, f'{entry_id} updated')
+        self.assertEqual(
+            response, {"success": f"{entry_id} updated in submissions"})
 
     def test_update_entry_raises_EntryNotFound(self, mock_client):
         mock_client.return_value = populate_mock_submissions(self.entries)
-        collection = 'submissions'
-        entry_id = 'abc'
+        collection = "submissions"
+        entry_id = "abc"
         data = {"message": "Ohayo"}
 
         with self.assertRaises(EntryNotFound) as context:

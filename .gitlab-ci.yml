@@ -1,25 +1,35 @@
-image: python:3.7
-
 stages:
   - test
+  - build
 
-run_tests:
+test:
   stage: test
-  script:
+  image: python:3.7
+  before_script:
     - python3 -m pip install -r requirements.txt
     - python3 -m pip install -r requirements-dev.txt
+  script:
     - make test
-
-run_linter:
-  stage: test
-  script:
-    - python3 -m pip install -r requirements.txt
-    - python3 -m pip install -r requirements-dev.txt
     - make lint
-
-run_type_check:
-  stage: test
-  script:
-    - python3 -m pip install -r requirements.txt
-    - python3 -m pip install -r requirements-dev.txt
     - make type-check
+
+build:
+  stage: build
+  image: docker:19.03.13
+  services:
+    - docker:dind
+  before_script:
+    - apk add --update --no-cache python3 py3-pip
+    - pip install awscli
+  script:
+    - $(aws ecr get-login --no-include-email)
+    - TAG="${CI_COMMIT_BRANCH}-${CI_COMMIT_SHORT_SHA}-${CI_JOB_ID}"
+    - docker build
+      -t $REPOSITORY_URL:$TAG
+      -t $REPOSITORY_URL:latest
+      .
+    - docker push $REPOSITORY_URL
+  only:
+    - primary
+  tags:
+    - docker

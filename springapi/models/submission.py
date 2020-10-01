@@ -1,87 +1,152 @@
+import base64
+import uuid
 import springapi.models.firebase.client as client
 from springapi.models.exceptions import ValidationError
+from typing import Dict, List, Any
+
+
+COLLECTION = 'submissions'
+
+FIELDS = {
+    'allowSharing': {'isRequired': False, 'type': bool, 'default': False},
+    'allowSNS': {'isRequired': False, 'type': bool, 'default': False},
+    'isApproved': {'isRequired': False, 'type': bool, 'default': False},
+    'location': {'isRequired': True, 'type': str, 'default': ''},
+    'message': {'isRequired': True, 'type': str, 'default': ''},
+    'name': {'isRequired': True, 'type': str, 'default': ''},
+    'id': {'isRequired': True, 'type': str, 'default': ''}
+}
+
+
+def _create_uid():
+    raw_uid = uuid.uuid4().bytes
+    uid_base32 = \
+        base64.b32encode(raw_uid).decode('ascii').rsplit("=")[0].lower()
+    return uid_base32
+
+
+def _set_defaults(data: Dict[str, Any]) -> Dict[str, Any]:
+    for field_name, field_settings in FIELDS.items():
+        data.setdefault(field_name, field_settings["default"])
+    return data
+
+
+def _check_disallowed_fields(data: Dict[str, Any]) -> List[str]:
+    disallowed = sorted([d for d in data if d not in FIELDS.keys()])
+    return disallowed
+
+
+def _check_required_fields(data: Dict[str, Any]) -> List[str]:
+    required = [f for f in FIELDS if
+                FIELDS[f]['isRequired'] is True]
+    missing = sorted(list(set(required) - set(list(data.keys()))))
+    return missing
+
+
+def _check_type(data: Dict[str, Any]) -> List[str]:
+    bad_types = sorted([d for d in data if d in FIELDS.keys() and
+                        type(data[d]) is not FIELDS[d]['type']])
+    return bad_types
+
+
+def _validate_data(data: Dict[str, Any]) -> None:
+    disallowed = _check_disallowed_fields(data)
+    if disallowed:
+        raise ValidationError(f'Not allowed: {", ".join(disallowed)}')
+
+    missing = _check_required_fields(data)
+    if missing:
+        raise ValidationError(f'Missing: {", ".join(missing)}')
+
+    bad_types = _check_type(data)
+    if bad_types:
+        type_errors = [f'{e} is {str(type(data[e]))}, should be '
+                       f'{str(FIELDS[e]["type"])}.'
+                       for e in bad_types]
+        raise ValidationError(" ".join(type_errors))
 
 
 class Submission:
 
-    def __init__(self):
-        self.collection = 'submissions'
-        self.fields = {
-            'allowSharing':
-                {'isRequired': False, 'type': bool, 'default': False},
-            'allowSNS':
-                {'isRequired': False, 'type': bool, 'default': False},
-            'isApproved':
-                {'isRequired': False, 'type': bool, 'default': False},
-            'location':
-                {'isRequired': True, 'type': str, 'default': ''},
-            'message':
-                {'isRequired': True, 'type': str, 'default': ''},
-            'name':
-                {'isRequired': True, 'type': str, 'default': ''}
+    def __init__(
+            self, identifier, name, message, location, is_approved, allow_sns,
+            allow_sharing):
+        self.identifier = identifier
+        self.name = name
+        self.message = message
+        self.location = location
+        self.is_approved = is_approved
+        self.allow_sns = allow_sns
+        self.allow_sharing = allow_sharing
+
+    @classmethod
+    def from_json(cls, submission_data: Dict[str, Any]) -> "Submission":
+        _validate_data(submission_data)
+        populated = _set_defaults(submission_data)
+        return cls(
+            identifier=populated["id"],
+            name=populated["name"],
+            message=populated["message"],
+            location=populated["location"],
+            is_approved=populated["isApproved"],
+            allow_sns=populated["allowSNS"],
+            allow_sharing=populated["allowSharing"])
+
+    def to_json(self):
+        return {
+            "id": self.identifier,
+            "name": self.name,
+            "message": self.message,
+            "location": self.location,
+            "allowSNS": self.allow_sns,
+            "allowSharing": self.allow_sharing,
+            "isApproved": self.is_approved
         }
 
-    def _check_disallowed_fields(self, data):
-        disallowed = sorted([d for d in data if d not in self.fields.keys()])
-        return disallowed
+    def __eq__(self, other):
+        if not isinstance(other, Submission):
+            return False
+        return self.to_json() == other.to_json()
 
-    def _check_required_fields(self, data):
-        required = [f for f in self.fields if
-                    self.fields[f]['isRequired'] is True]
-        missing = sorted(list(set(required) - set(list(data.keys()))))
-        return missing
+    @classmethod
+    def get_submissions(cls) -> List["Submission"]:
+        response = client.get_collection(COLLECTION)
+        submissions = []
+        for result_id, result in response.items():
+            result["id"] = result_id
+            try:
+                submissions.append(Submission.from_json(result))
+            except ValidationError:
+                continue
+        return submissions
 
-    def _check_type(self, data):
-        bad_types = sorted([d for d in data if d in self.fields.keys() and
-                            type(data[d]) is not self.fields[d]['type']])
-        return bad_types
+    @classmethod
+    def get_submission(cls, entry_id: str) -> "Submission":
+        response = client.get_entry(COLLECTION, entry_id)
+        response["id"] = entry_id
+        try:
+            submission = Submission.from_json(response)
+        except ValidationError as err:
+            raise ValueError(err)
+        return submission
 
-    def _validate_data(self, data):
-        disallowed = self._check_disallowed_fields(data)
-        if disallowed:
-            raise ValidationError(f'Not allowed: {", ".join(disallowed)}')
+    @classmethod
+    def create_submission(cls, data: Dict[str, Any]) -> "Submission":
+        data["id"] = _create_uid()
+        _validate_data(data)
+        data = _set_defaults(data)
 
-        missing = self._check_required_fields(data)
-        if missing:
-            raise ValidationError(f'Missing: {", ".join(missing)}')
+        response = client.add_entry(COLLECTION, data.copy())
+        result = response[data["id"]]
+        result.setdefault("id", data["id"])
+        return Submission.from_json(result)
 
-        bad_types = self._check_type(data)
-        if bad_types:
-            type_errors = [f'{e} is {type(data[e]).__name__}, should be '
-                           f'{self.fields[e]["type"].__name__}.'
-                           for e in bad_types]
-            raise ValidationError(" ".join(type_errors))
+    @classmethod
+    def update_submission(
+            cls, entry_id: str, data: Dict[str, Any]) -> "Submission":
+        data["id"] = entry_id
+        _validate_data(data)
+        data = _set_defaults(data)
 
-    def _set_defaults(self, data):
-        for f in self.fields:
-            if f not in data:
-                data[f] = self.fields[f]['default']
-        return data
-
-    def get_submissions(self):
-        response = client.get_collection(self.collection)
-        return response
-
-    def get_submission(self, entry_id):
-        response = client.get_entry(self.collection, entry_id)
-        return response
-
-    def create_submission(self, data):
-        invalid = self._validate_data(data)
-        if invalid:
-            raise ValidationError('\r\n'.join(invalid))
-
-        data = self._set_defaults(data)
-
-        response = client.add_entry(self.collection, data)
-        return response
-
-    def update_submission(self, entry_id, data):
-        invalid = self._validate_data(data)
-        if invalid:
-            raise ValidationError('\r\n'.join(invalid))
-
-        data = self._set_defaults(data)
-
-        response = client.update_entry(self.collection, data, entry_id)
+        response = client.update_entry(COLLECTION, data.copy(), entry_id)
         return response
