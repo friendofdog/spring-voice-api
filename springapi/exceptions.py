@@ -1,4 +1,5 @@
 import functools
+import logging
 
 
 class CollectionNotFound(Exception):
@@ -65,8 +66,36 @@ def pretty_errors(fn):
         try:
             return fn(*args, **kwargs)
         except Exception as e:
+            logging.exception("Error running route")
             if hasattr(e, "error_response_body_and_code"):
                 return e.error_response_body_and_code()
             else:
                 return {"error": "Unexpected server error"}, 500
     return wrapped_fn
+
+
+def http_error(error, message, code):
+    class HttpError(Exception):
+
+        def error_response_body(self):
+            return {
+                "error": error,
+                "message": message
+            }
+
+        def error_response_body_and_code(self):
+            return self.error_response_body(), code
+
+    return HttpError
+
+
+MissingAuthorization = http_error(
+    "unauthorized", "Request requires Authorization header", 401)
+
+
+InvalidAuthHeaderValue = http_error(
+    "bad_request", "Requires bearer token", 400)
+
+
+InvalidAuthorization = http_error(
+    "forbidden", "You are not authorized to perform this action", 403)

@@ -1,5 +1,6 @@
 from tests.helpers import SubmissionResponseAssertions
-from springapi.models import exceptions
+from springapi.exceptions import \
+    ValidationError, CollectionNotFound, EntryAlreadyExists, EntryNotFound
 from springapi.models.submission import Submission
 from unittest import mock
 
@@ -20,7 +21,7 @@ class TestSubmissionValidation(SubmissionResponseAssertions):
         self.assert_missing_fields_get_default_values(data, defaults)
 
     def test_submission_from_json_rejects_invalid_data(self):
-        with self.assertRaises(exceptions.ValidationError):
+        with self.assertRaises(ValidationError):
             Submission.from_json({
                 "name": 5,
                 "message": "b",
@@ -69,7 +70,7 @@ class TestSubmissionGetAllSubmissions(SubmissionResponseAssertions):
         mock_get.assert_called_with("submissions")
 
     def test_get_submissions_raises_CollectionNotFound(self, mock_get):
-        mock_get.side_effect = exceptions.CollectionNotFound('submissions')
+        mock_get.side_effect = CollectionNotFound('submissions')
         self.assert_get_submissions_raises_not_found()
 
     def test_get_submissions_omits_invalid_entries(self, mock_get):
@@ -131,7 +132,7 @@ class TestSubmissionGetSingleSubmission(SubmissionResponseAssertions):
 
     def test_get_submission_raises_EntryNotFound(self, mock_get):
         entry_id = 'abc'
-        mock_get.side_effect = exceptions.EntryNotFound(
+        mock_get.side_effect = EntryNotFound(
             entry_id, 'submissions')
         self.assert_get_single_submission_raises_not_found(entry_id)
 
@@ -170,7 +171,7 @@ class TestSubmissionCreateSubmission(SubmissionResponseAssertions):
             self, mock_add, mock_id):
         entry_id = mock_id.return_value = 'abc'
         data = {'id': entry_id, 'name': 'a', 'location': 'b', 'message': 'c'}
-        mock_add.side_effect = exceptions.EntryAlreadyExists(
+        mock_add.side_effect = EntryAlreadyExists(
             entry_id, 'submissions')
         self.assert_create_submission_raises_already_exists(entry_id, data)
 
@@ -191,7 +192,7 @@ class TestSubmissionUpdateSubmission(SubmissionResponseAssertions):
             self, mock_update):
         entry_id = 'abc'
         data = {'name': 'a', 'location': 'b', 'message': 'new message'}
-        mock_update.side_effect = exceptions.EntryNotFound(entry_id, 'def')
+        mock_update.side_effect = EntryNotFound(entry_id, 'def')
         self.assert_update_submission_raises_not_found(entry_id, data)
 
     def test_update_submission_raises_ValidationError(self):

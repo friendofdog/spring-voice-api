@@ -1,6 +1,6 @@
 from firebase_admin import firestore  # type: ignore
 from google.api_core import exceptions as google_exceptions  # type: ignore
-from springapi.models.exceptions import \
+from springapi.exceptions import \
     CollectionNotFound, EntryAlreadyExists, EntryNotFound, ValidationError
 
 

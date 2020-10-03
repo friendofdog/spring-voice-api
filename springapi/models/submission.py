@@ -1,7 +1,7 @@
 import base64
 import uuid
 import springapi.models.firebase.client as client
-from springapi.models.exceptions import ValidationError
+from springapi.exceptions import ValidationError
 from typing import Dict, List, Any
 
 

@@ -2,5 +2,5 @@ from springapi.helpers import route, VERSION
 
 
 @route(f"/api/{VERSION}/healthcheck", methods=['GET'])
-def healthcheck():
+def healthcheck(config):
     return {"success": True}, 200

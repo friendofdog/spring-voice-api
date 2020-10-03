@@ -6,12 +6,12 @@ from unittest import mock
 class TestSpringapiAppCreation(unittest.TestCase):
 
     def test_springapi_defaults_to_testing(self):
-        app = create_app({})
+        app = create_app({"ADMIN_TOKEN": "abc"})
         app_env = app.config
         self.assertEqual(app_env['ENV'], 'testing')
 
     def test_springapi_dev_env_enables_debug(self):
-        app = create_app({"FLASK_ENV": "development"})
+        app = create_app({"FLASK_ENV": "development", "ADMIN_TOKEN": "ABC"})
         app_env = app.config
         self.assertEqual(app_env['ENV'], 'development')
         self.assertEqual(app_env['DEBUG'], True)

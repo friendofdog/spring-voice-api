@@ -1,6 +1,6 @@
 import unittest
 from mockfirestore import MockFirestore
-from springapi.models.exceptions import \
+from springapi.exceptions import \
     CollectionNotFound, EntryAlreadyExists, EntryNotFound, ValidationError
 from springapi.models.firebase.client \
     import get_collection, get_entry, add_entry, update_entry

@@ -4,7 +4,8 @@ import unittest
 from mockfirestore import MockFirestore  # type: ignore
 from springapi.app import create_app
 from springapi.config_helpers import encode_json_uri
-from springapi.models import exceptions
+from springapi.exceptions import \
+    EntryNotFound, CollectionNotFound, ValidationError, EntryAlreadyExists
 from springapi.models.submission import Submission
 
 
@@ -27,7 +28,7 @@ class SubmissionResponseAssertions(unittest.TestCase):
 
     def assert_get_submissions_raises_not_found(self):
         with self._assert_expected_exception_and_error(
-                exceptions.CollectionNotFound,
+                CollectionNotFound,
                 {'error': 'Collection submissions not found'}):
             Submission.get_submissions()
 
@@ -36,7 +37,7 @@ class SubmissionResponseAssertions(unittest.TestCase):
         self.assertEqual(result, expected_resp)
 
     def assert_get_single_submission_raises_not_found(self, entry_id):
-        exception = exceptions.EntryNotFound
+        exception = EntryNotFound
         err = {'error': f'{entry_id} was not found in submissions'}
         with self._assert_expected_exception_and_error(exception, err):
             Submission.get_submission(entry_id)
@@ -46,12 +47,12 @@ class SubmissionResponseAssertions(unittest.TestCase):
         self.assertEqual(expected_resp, Submission.get_submission(entry_id))
 
     def assert_create_submission_raises_validation_error(self, data):
-        exception = exceptions.ValidationError
+        exception = ValidationError
         with self._assert_expected_exception_and_error(exception):
             Submission.create_submission(data)
 
     def assert_create_submission_raises_already_exists(self, entry_id, data):
-        exception = exceptions.EntryAlreadyExists
+        exception = EntryAlreadyExists
         err = {'error': f'{entry_id} already exists in submissions'}
         with self._assert_expected_exception_and_error(exception, err):
             Submission.create_submission(data)
@@ -62,13 +63,13 @@ class SubmissionResponseAssertions(unittest.TestCase):
         self.assertEqual(expected, result)
 
     def assert_update_submission_raises_not_found(self, entry_id, data):
-        exception = exceptions.EntryNotFound
+        exception = EntryNotFound
         err = {'error': f'{entry_id} was not found in def'}
         with self._assert_expected_exception_and_error(exception, err):
             Submission.update_submission(entry_id, data)
 
     def assert_update_submission_raises_validation_error(self, entry_id, data):
-        exception = exceptions.ValidationError
+        exception = ValidationError
         err = {'error': 'Missing: location'}
         with self._assert_expected_exception_and_error(exception, err):
             Submission.update_submission(entry_id, data)
@@ -81,60 +82,112 @@ class SubmissionResponseAssertions(unittest.TestCase):
 
 class RouteResponseAssertions(unittest.TestCase):
 
-    def _assert_expected_code_and_response(
-            self, method, path, expected_code, expected_response, body=None):
-        with make_test_client() as client:
+    def assert_expected_code_and_response(
+            self, method, path, expected_code, expected_response, body=None,
+            credentials=None, config=None):
+        request_headers = {}
+        config = config if config is not None else {"ADMIN_TOKEN": "TOKEN"}
+        request_headers.update(credentials if credentials is not None else {})
+        with make_test_client(config) as client:
             call = getattr(client, method)
             if method in ['post', 'put']:
-                r = call(path, data=body)
+                r = call(path, data=body, headers=request_headers)
             else:
-                r = call(path)
+                r = call(path, headers=request_headers)
             self.assertEqual(expected_code, r.status)
             response_body = r.get_json()
             if expected_response is not None:
-                print(response_body)
                 self.assertEqual(response_body, expected_response)
             self.assertEqual(
                 "application/json", r.headers["Content-type"])
 
-    def assert_get_raises_ok(self, path, expected_response=None):
-        return self._assert_expected_code_and_response(
-            'get', path, '200 OK', expected_response)
+    def assert_requires_admin_authentication(self, method, path):
+        expected_response = {
+            "error": "unauthorized",
+            "message": "Request requires Authorization header"
+        }
+        self.assert_expected_code_and_response(
+            method, path, '401 UNAUTHORIZED', expected_response)
 
-    def assert_get_raises_not_found(self, path, expected_response=None):
-        return self._assert_expected_code_and_response(
-            'get', path, '404 NOT FOUND', expected_response)
+        expected_response = {
+            "error": "bad_request",
+            "message": "Requires bearer token"
+        }
+        self.assert_expected_code_and_response(
+            method, path, '400 BAD REQUEST', expected_response,
+            credentials={"Authorization": "FOOBAR"})
 
-    def assert_get_raises_invalid_body(self, path, expected_response=None):
-        return self._assert_expected_code_and_response(
-            'get', path, '400 BAD REQUEST', expected_response)
+        expected_response = {
+            "error": "forbidden",
+            "message": "You are not authorized to perform this action"
+        }
+        self.assert_expected_code_and_response(
+            method, path, '403 FORBIDDEN', expected_response,
+            credentials={"Authorization": "Bearer FOOBAR"})
 
-    def assert_post_raises_ok(self, path, body, expected_response=None):
-        return self._assert_expected_code_and_response(
-            'post', path, '201 CREATED', expected_response, json.dumps(body))
+        expected_response = {
+            "error": "forbidden",
+            "message": "You are not authorized to perform this action"
+        }
+        self.assert_expected_code_and_response(
+            method, path, '403 FORBIDDEN', expected_response,
+            credentials={"Authorization": "Bearer TOKEN"},
+            config={"ADMIN_TOKEN": "FOOBAR"})
 
-    def assert_post_raises_invalid_body(self, path, expected_response=None):
+    def assert_get_raises_ok(
+            self, path, expected_response=None, credentials=None):
+        return self.assert_expected_code_and_response(
+            'get', path, '200 OK', expected_response, credentials=credentials)
+
+    def assert_get_raises_not_found(
+            self, path, expected_response=None, credentials=None):
+        return self.assert_expected_code_and_response(
+            'get', path, '404 NOT FOUND', expected_response,
+            credentials=credentials)
+
+    def assert_get_raises_invalid_body(
+            self, path, expected_response=None, credentials=None):
+        return self.assert_expected_code_and_response(
+            'get', path, '400 BAD REQUEST', expected_response,
+            credentials=credentials)
+
+    def assert_post_raises_ok(
+            self, path, body, expected_response=None, credentials=None):
+        return self.assert_expected_code_and_response(
+            'post', path, '201 CREATED', expected_response, json.dumps(body),
+            credentials=credentials)
+
+    def assert_post_raises_invalid_body(
+            self, path, expected_response=None, credentials=None):
         invalid_body = b'FOOBAR'
-        return self._assert_expected_code_and_response(
-            'post', path, '400 BAD REQUEST', expected_response, invalid_body)
+        return self.assert_expected_code_and_response(
+            'post', path, '400 BAD REQUEST', expected_response, invalid_body,
+            credentials=credentials)
 
     def assert_post_raises_already_exists(
-            self, path, body, expected_response=None):
-        return self._assert_expected_code_and_response(
-            'post', path, '409 CONFLICT', expected_response, json.dumps(body))
+            self, path, body, expected_response=None, credentials=None):
+        return self.assert_expected_code_and_response(
+            'post', path, '409 CONFLICT', expected_response, json.dumps(body),
+            credentials=credentials)
 
-    def assert_put_raises_ok(self, path, body, expected_response=None):
-        return self._assert_expected_code_and_response(
-            'put', path, '200 OK', expected_response, json.dumps(body))
+    def assert_put_raises_ok(
+            self, path, body, expected_response=None, credentials=None):
+        return self.assert_expected_code_and_response(
+            'put', path, '200 OK', expected_response, json.dumps(body),
+            credentials=credentials)
 
-    def assert_put_raises_not_found(self, path, body, expected_response=None):
-        return self._assert_expected_code_and_response(
-            'put', path, '404 NOT FOUND', expected_response, json.dumps(body))
+    def assert_put_raises_not_found(
+            self, path, body, expected_response=None, credentials=None):
+        return self.assert_expected_code_and_response(
+            'put', path, '404 NOT FOUND', expected_response, json.dumps(body),
+            credentials=credentials)
 
-    def assert_put_raises_invalid_body(self, path, expected_response=None):
+    def assert_put_raises_invalid_body(
+            self, path, expected_response=None, credentials=None):
         invalid_body = b'FOOBAR'
-        return self._assert_expected_code_and_response(
-            'put', path, '400 BAD REQUEST', expected_response, invalid_body)
+        return self.assert_expected_code_and_response(
+            'put', path, '400 BAD REQUEST', expected_response, invalid_body,
+            credentials=credentials)
 
 
 def populate_mock_submissions(entries):
@@ -150,6 +203,7 @@ def populate_mock_submissions(entries):
 def make_test_client(environ=None):
     environ = environ or {}
     environ.setdefault("DATABASE_URI", encode_json_uri("firestore", {}))
+    environ.setdefault("ADMIN_TOKEN", "abc")
     app = create_app(environ)
     with app.test_client() as client:
         yield client
