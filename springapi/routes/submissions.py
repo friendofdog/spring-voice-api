@@ -1,19 +1,20 @@
 import json
-from springapi.helpers import route, requires_admin, VERSION
+from springapi.helpers import make_route, requires_admin, VERSION
 from springapi.models.submission import Submission
 from flask import request
 
 
-@route(f"/api/{VERSION}/submissions", methods=['GET'])
+@make_route(f"/api/{VERSION}/submissions", methods=['GET'])
 @requires_admin
 def get_all(config):
     submissions = [s.to_json() for s in Submission.get_submissions()]
     return {"submissions": submissions}, 200
 
 
-@route(f"/api/{VERSION}/submissions/<entry_id>", methods=['GET'])
+@make_route(f"/api/{VERSION}/submissions/<entry_id>", methods=['GET'])
 @requires_admin
 def get_single(config, entry_id):
+    print('get_single')
     try:
         submission = Submission.get_submission(entry_id)
     except ValueError as err:
@@ -22,7 +23,7 @@ def get_single(config, entry_id):
     return submission.to_json(), 200
 
 
-@route(f"/api/{VERSION}/submissions", methods=['POST'])
+@make_route(f"/api/{VERSION}/submissions", methods=['POST'])
 def create_single(config):
     try:
         request_data = json.loads(request.data)
@@ -31,7 +32,7 @@ def create_single(config):
     return Submission.create_submission(request_data).to_json(), 201
 
 
-@route(f"/api/{VERSION}/submissions/<entry_id>", methods=['PUT'])
+@make_route(f"/api/{VERSION}/submissions/<entry_id>", methods=['PUT'])
 @requires_admin
 def update_single(config, entry_id):
     try:

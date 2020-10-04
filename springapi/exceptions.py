@@ -61,8 +61,22 @@ class ValidationError(Exception):
 
 
 def pretty_errors(fn):
+    """
+    Applies exceptions to the passed-in function, ensuring that if it fails
+    when called an appropriate exception will be given.
+
+    :param fn: func <springapi.routes.route.fn>
+    :return: func <wrapper_fn>
+    """
+
     @functools.wraps(fn)
     def wrapped_fn(*args, **kwargs):
+        """
+        :param args: dict, configuration
+        :param kwargs: str, id of existing entry
+        :return: dict or exception, response to a call to a route
+        """
+
         try:
             return fn(*args, **kwargs)
         except Exception as e:
