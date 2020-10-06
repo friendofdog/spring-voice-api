@@ -53,6 +53,13 @@ def register(app, fn):
 
 
 def requires_admin(original_route):
+    """
+    Checks config of route, returning the route if authorization passes and
+    returning an exception if not.
+
+    :param original_route: <springapi.routes.route.fn>
+    :return: func <springapi.routes.route.fn>
+    """
     @functools.wraps(original_route)
     def wrapper(config, *args, **kwargs):
         if "Authorization" not in request.headers:
