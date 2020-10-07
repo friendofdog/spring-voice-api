@@ -3,7 +3,7 @@ import os
 from flask import Flask
 
 from springapi.config_helpers import decode_json_uri
-from springapi.helpers import register
+from springapi.helpers import AUTH_ENV_VAR, register
 from springapi.models.firebase.app import authenticate
 from springapi.routes.healthcheck import healthcheck
 from springapi.routes.submissions import \
@@ -23,7 +23,7 @@ def create_database_instance(config):
 def create_app(config):
     config.setdefault("ENV", config.get("FLASK_ENV", "testing"))
     config.setdefault("DEBUG", config["ENV"] == "development")
-    assert "ADMIN_TOKEN" in config
+    assert AUTH_ENV_VAR in config
 
     app = Flask(__name__)
 

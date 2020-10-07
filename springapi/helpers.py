@@ -1,11 +1,13 @@
 import functools
 
 from flask import request
+from springapi.config_helpers import decode_json_uri
 from springapi.exceptions import pretty_errors, \
     MissingAuthorization, InvalidAuthHeaderValue, InvalidAuthorization
 
 
 VERSION = "v1"
+AUTH_ENV_VAR = "AUTH"
 
 
 def make_route(*route_args, **route_kwargs):
@@ -52,6 +54,12 @@ def register(app, fn):
     app.route(*fn.route_args, **fn.route_kwargs)(config_route)
 
 
+def get_valid_admin_tokens(config):
+    auth_uri = config
+    __, auth = decode_json_uri(auth_uri)
+    return auth
+
+
 def requires_admin(original_route):
     """
     Checks config of route, returning the route if authorization passes and
@@ -62,13 +70,15 @@ def requires_admin(original_route):
     """
     @functools.wraps(original_route)
     def wrapper(config, *args, **kwargs):
+        print(config)
         if "Authorization" not in request.headers:
             raise MissingAuthorization()
         auth_header_value = request.headers["Authorization"]
         if not auth_header_value.startswith("Bearer "):
             raise InvalidAuthHeaderValue()
         auth_token_value = auth_header_value.split("Bearer ", 1)[1]
-        if auth_token_value != config["ADMIN_TOKEN"]:
+        auth = get_valid_admin_tokens(config[AUTH_ENV_VAR])
+        if auth_token_value not in auth["admin_tokens"]:
             raise InvalidAuthorization()
         return original_route(config, *args, **kwargs)
     return wrapper
