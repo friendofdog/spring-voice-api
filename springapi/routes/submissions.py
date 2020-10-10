@@ -14,7 +14,6 @@ def get_all(config):
 @make_route(f"/api/{VERSION}/submissions/<entry_id>", methods=['GET'])
 @requires_admin
 def get_single(config, entry_id):
-    print('get_single')
     try:
         submission = Submission.get_submission(entry_id)
     except ValueError as err:

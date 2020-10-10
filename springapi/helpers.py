@@ -70,7 +70,6 @@ def requires_admin(original_route):
     """
     @functools.wraps(original_route)
     def wrapper(config, *args, **kwargs):
-        print(config)
         if "Authorization" not in request.headers:
             raise MissingAuthorization()
         auth_header_value = request.headers["Authorization"]
