@@ -1,6 +1,6 @@
 import unittest
 from springapi.app import create_app, create_database_instance
-from springapi.helpers import AUTH_ENV_VAR
+from springapi.helpers import VALID_USERS
 from tests.helpers import MOCK_TOKENS
 from unittest import mock
 
@@ -8,13 +8,13 @@ from unittest import mock
 class TestSpringapiAppCreation(unittest.TestCase):
 
     def test_springapi_defaults_to_testing(self):
-        app = create_app({AUTH_ENV_VAR: "TOKEN"})
+        app = create_app({VALID_USERS: "TOKEN"})
         app_env = app.config
         self.assertEqual(app_env['ENV'], 'testing')
 
     def test_springapi_dev_env_enables_debug(self):
         app = create_app(
-            {"FLASK_ENV": "development", AUTH_ENV_VAR: MOCK_TOKENS})
+            {"FLASK_ENV": "development", VALID_USERS: MOCK_TOKENS})
         app_env = app.config
         self.assertEqual(app_env['ENV'], 'development')
         self.assertEqual(app_env['DEBUG'], True)

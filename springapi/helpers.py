@@ -7,7 +7,7 @@ from springapi.exceptions import pretty_errors, \
 
 
 VERSION = "v1"
-AUTH_ENV_VAR = "AUTH"
+VALID_USERS = "USERS"
 
 
 def make_route(*route_args, **route_kwargs):
@@ -76,7 +76,7 @@ def requires_admin(original_route):
         if not auth_header_value.startswith("Bearer "):
             raise InvalidAuthHeaderValue()
         auth_token_value = auth_header_value.split("Bearer ", 1)[1]
-        auth = get_valid_admin_tokens(config[AUTH_ENV_VAR])
+        auth = get_valid_admin_tokens(config[VALID_USERS])
         if auth_token_value not in auth["admin_tokens"]:
             raise InvalidAuthorization()
         return original_route(config, *args, **kwargs)
