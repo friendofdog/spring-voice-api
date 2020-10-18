@@ -142,6 +142,12 @@ class RouteResponseAssertions(unittest.TestCase):
         return self.assert_expected_code_and_response(
             'get', path, '200 OK', expected_response, credentials=credentials)
 
+    def assert_get_raises_assertion_error(
+            self, path, expected_response=None, credentials=None):
+        return self.assert_expected_code_and_response(
+            'get', path, '400 BAD REQUEST', expected_response,
+            credentials=credentials)
+
     def assert_get_raises_not_found(
             self, path, expected_response=None, credentials=None):
         return self.assert_expected_code_and_response(
