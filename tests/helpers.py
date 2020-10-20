@@ -160,7 +160,7 @@ class RouteResponseAssertions(unittest.TestCase):
             'get', path, '400 BAD REQUEST', expected_response,
             credentials=credentials)
 
-    def assert_post_raises_ok(
+    def assert_post_raises_created(
             self, path, body, expected_response=None, credentials=None):
         return self.assert_expected_code_and_response(
             'post', path, '201 CREATED', expected_response, json.dumps(body),

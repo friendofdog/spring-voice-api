@@ -191,7 +191,7 @@ class TestSubmissionsRouteCreate(RouteResponseAssertions):
 
         data["id"] = entry_id  # _create_uid()
         expected = Submission.from_json(data).to_json()
-        self.assert_post_raises_ok('/api/v1/submissions', data, expected)
+        self.assert_post_raises_created('/api/v1/submissions', data, expected)
         mock_add.assert_called_with("submissions", expected)
 
     def test_create_single_raises_EntryAlreadyExists(self, mock_add, mock_id):
