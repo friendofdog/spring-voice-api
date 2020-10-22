@@ -1,7 +1,7 @@
 import requests
 import unittest
 from springapi.auth.models.google import (
-    request_auth_code, exchange_token, GoogleResponseError)
+    request_auth_code, exchange_token, AuthProviderResponseError)
 from unittest import mock
 
 
@@ -16,7 +16,7 @@ class TestGoogleAuthorization(unittest.TestCase):
     def test_request_auth_code_raises_error_on_bad_response(self, mock_get):
         mock_get.return_value.status_code = 400
 
-        with self.assertRaises(GoogleResponseError) as context:
+        with self.assertRaises(AuthProviderResponseError) as context:
             request_auth_code({"a": "b"})
         self.assertEqual(
             str(context.exception),
@@ -35,7 +35,7 @@ class TestGoogleToken(unittest.TestCase):
     def test_exchange_token_raises_error_on_bad_response(self, mock_post):
         mock_post.return_value.status_code = 400
 
-        with self.assertRaises(GoogleResponseError) as context:
+        with self.assertRaises(AuthProviderResponseError) as context:
             exchange_token('some_auth_code')
         self.assertEqual(
             str(context.exception),

@@ -1,6 +1,7 @@
 import unittest
 from springapi.auth.authorization import (
-    get_auth_code, exchange_token, AuthorizationError)
+    get_auth_code, exchange_token)
+from springapi.exceptions import AuthorizationError, AuthProviderResponseError
 from unittest import mock
 
 
@@ -13,11 +14,10 @@ class TestAuthorization(unittest.TestCase):
         self.assertEqual(response, expected)
 
     def test_get_auth_code_raises_error_on_bad_requst(self, mock_resp):
-        mock_resp.return_value = Exception("blah")
+        mock_resp.side_effect = AuthProviderResponseError("blah")
         with self.assertRaises(AuthorizationError) as context:
             get_auth_code({"foo": "bar"})
-        self.assertEqual(str(context.exception),
-                         "Something went wrong with authorization: blah")
+        self.assertEqual(str(context.exception), "blah")
 
 
 @mock.patch('springapi.auth.authorization.client_get_token')
@@ -29,8 +29,7 @@ class TestToken(unittest.TestCase):
         self.assertEqual(response, expected)
 
     def test_exchange_token_raises_error_on_bad_requst(self, mock_resp):
-        mock_resp.return_value = Exception("no good")
+        mock_resp.side_effect = AuthProviderResponseError("no good")
         with self.assertRaises(AuthorizationError) as context:
             exchange_token({"foo": "bar"})
-        self.assertEqual(str(context.exception),
-                         "Something went wrong with token exchange: no good")
+        self.assertEqual(str(context.exception), "no good")

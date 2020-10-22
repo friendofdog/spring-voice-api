@@ -22,7 +22,7 @@ def exchange_token(params=None):
             "code": "54321",
             "client_id": "abcde",
             "client_secret": "qwerty",
-            "redirect_uri": "http://localhost:5000/api/v1/token",
+            "redirect_uri": "http://localhost:5000/api/v1/auth-callback",
             "grant_type": "authorization_code"
         }
     requests.post(

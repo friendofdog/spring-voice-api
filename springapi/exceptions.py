@@ -60,6 +60,30 @@ class ValidationError(Exception):
         return self.error_response_body(), 400
 
 
+class AuthorizationError(Exception):
+
+    def __init__(self, message):
+        self.message = message
+
+    def error_response_body(self):
+        return {'error': self.message}
+
+    def error_response_body_and_code(self):
+        return self.error_response_body(), 400
+
+
+class AuthProviderResponseError(Exception):
+
+    def __init__(self, message):
+        self.message = message
+
+    def error_response_body(self):
+        return {'error': self.message}
+
+    def error_response_body_and_code(self):
+        return self.error_response_body(), 400
+
+
 def pretty_errors(fn):
     """
     Applies exceptions to the passed-in function, ensuring that if it fails

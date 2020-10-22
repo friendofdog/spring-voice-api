@@ -6,9 +6,10 @@ from springapi.config_helpers import decode_json_uri
 from springapi.helpers import VALID_USERS, register
 from springapi.models.firebase.app import authenticate
 from springapi.routes.healthcheck import healthcheck
-from springapi.routes.submissions import \
-    get_all, get_single, create_single, update_single
-from springapi.routes.auth import auth
+from springapi.routes.submissions import (
+    get_all, get_single, create_single, update_single)
+from springapi.routes.authorization import (
+    request_auth_code, request_exchange_token)
 
 
 def create_database_instance(config):
@@ -36,7 +37,8 @@ def create_app(config):
     register(app, get_single)
     register(app, create_single)
     register(app, update_single)
-    register(app, auth)
+    register(app, request_auth_code)
+    register(app, request_exchange_token)
     return app
 
 

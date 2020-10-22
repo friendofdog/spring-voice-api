@@ -142,12 +142,6 @@ class RouteResponseAssertions(unittest.TestCase):
         return self.assert_expected_code_and_response(
             'get', path, '200 OK', expected_response, credentials=credentials)
 
-    def assert_get_raises_assertion_error(
-            self, path, expected_response=None, credentials=None):
-        return self.assert_expected_code_and_response(
-            'get', path, '400 BAD REQUEST', expected_response,
-            credentials=credentials)
-
     def assert_get_raises_not_found(
             self, path, expected_response=None, credentials=None):
         return self.assert_expected_code_and_response(
@@ -158,6 +152,18 @@ class RouteResponseAssertions(unittest.TestCase):
             self, path, expected_response=None, credentials=None):
         return self.assert_expected_code_and_response(
             'get', path, '400 BAD REQUEST', expected_response,
+            credentials=credentials)
+
+    def assert_get_raises_authorization_error(
+            self, path, body, expected_response=None, credentials=None):
+        return self.assert_expected_code_and_response(
+            'get', path, '400 BAD REQUEST', expected_response,
+            json.dumps(body), credentials=credentials)
+
+    def assert_post_raises_ok(
+            self, path, body, expected_response=None, credentials=None):
+        return self.assert_expected_code_and_response(
+            'post', path, '200 OK', expected_response, json.dumps(body),
             credentials=credentials)
 
     def assert_post_raises_created(
@@ -172,6 +178,12 @@ class RouteResponseAssertions(unittest.TestCase):
         return self.assert_expected_code_and_response(
             'post', path, '400 BAD REQUEST', expected_response, invalid_body,
             credentials=credentials)
+
+    def assert_post_raises_authorization_error(
+            self, path, body, expected_response=None, credentials=None):
+        return self.assert_expected_code_and_response(
+            'post', path, '400 BAD REQUEST', expected_response,
+            json.dumps(body), credentials=credentials)
 
     def assert_post_raises_already_exists(
             self, path, body, expected_response=None, credentials=None):
@@ -200,7 +212,6 @@ class RouteResponseAssertions(unittest.TestCase):
 
 
 def populate_mock_submissions(entries):
-
     mock_db = MockFirestore()
     for key, data in entries.items():
         mock_db.collection('submissions').add(data, key)
