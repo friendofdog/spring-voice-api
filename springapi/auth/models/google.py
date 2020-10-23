@@ -13,7 +13,7 @@ def request_auth_code(params):
     return {"success": True}
 
 
-def exchange_token(params):
+def exchange_auth_token(params):
     url = "https://oauth2.googleapis.com/token"
     try:
         response = requests.post(url=url, params=params)

@@ -16,7 +16,7 @@ def request_auth_code(params=None):
     return {"success": True}
 
 
-def exchange_token(params=None):
+def exchange_auth_token(params=None):
     if params is None:
         params = {
             "code": "54321",
