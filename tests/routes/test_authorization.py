@@ -5,6 +5,8 @@ from unittest import mock
 
 class TestAuthRoute(RouteResponseAssertions):
 
+    __test__ = False
+
     def test_auth_route_returns_success(self):
         expected = {"success": True}
         self.assert_post_raises_ok(
@@ -25,6 +27,8 @@ class TestAuthRoute(RouteResponseAssertions):
 
 @mock.patch('springapi.routes.authorization.exchange_token')
 class TestAuthCallbackRoute(RouteResponseAssertions):
+
+    __test__ = False
 
     def test_auth_callback_route_exchanges_token(self, mock_auth):
         expected = mock_auth.return_value = {"success": True}
