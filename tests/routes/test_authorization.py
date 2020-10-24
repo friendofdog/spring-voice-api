@@ -8,7 +8,7 @@ class TestAuthRoute(RouteResponseAssertions):
     def test_auth_route_returns_success(self):
         expected = {"success": True}
         self.assert_post_raises_ok(
-            "/api/v1/auth", {"foo": "bar"}, expected)
+            "/api/v1/auth", {"client_id": "123"}, expected)
 
     def test_auth_route_rejects_invalid_json(self):
         err = ValidationError('Invalid JSON')

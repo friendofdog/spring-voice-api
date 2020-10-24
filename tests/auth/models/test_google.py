@@ -10,14 +10,14 @@ class TestGoogleAuthorization(unittest.TestCase):
 
     def test_request_auth_code_returns_code(self, mock_get):
         mock_get.return_value.status_code = 200
-        response = request_auth_code({"a": "b"})
+        response = request_auth_code({"client_id": "123"})
         self.assertEqual(response, {"success": True})
 
     def test_request_auth_code_raises_error_on_bad_response(self, mock_get):
         mock_get.return_value.status_code = 400
 
         with self.assertRaises(AuthProviderResponseError) as context:
-            request_auth_code({"a": "b"})
+            request_auth_code({"client_id": "123"})
         self.assertEqual(
             str(context.exception),
             "Error retrieving auth code from "
