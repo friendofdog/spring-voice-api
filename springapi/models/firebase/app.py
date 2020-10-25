@@ -5,7 +5,7 @@ import firebase_admin as auth  # type: ignore
 from springapi.config_helpers import decode_json_uri
 
 
-def authenticate(uri):
+def authenticate_db(uri):
     _, config = decode_json_uri(uri)
     if 'project_id' in config.keys():
         with tempfile.NamedTemporaryFile(suffix=".json") as cred_file:

@@ -8,6 +8,7 @@ from springapi.exceptions import pretty_errors, \
 
 VERSION = "v1"
 VALID_USERS = "USERS"
+AUTH = "AUTH"
 
 
 def make_route(*route_args, **route_kwargs):

@@ -3,17 +3,21 @@ import unittest
 from unittest import mock
 
 from springapi.config_helpers import encode_json_uri, InvalidJSONURI
-from springapi.models.firebase.app import authenticate, MissingProjectId
+from springapi.models.firebase.app import authenticate_db, MissingProjectId
 
 
 class MockGoogleAuthCredentials:
 
     @classmethod
     def from_path(cls, path):
-        # the default Firebase Certificate constructor expects a path,
-        # so we're creating a method here that can be used in mocks to
-        # intercept the provided path and make assertions about what's
-        # being passed in
+        """
+        The default Firebase Certificate constructor expects a path, so we're
+        creating a method here that can be used in mocks to intercept the
+        provided path and make assertions about what's being passed in
+
+        :param path:
+        :return:
+        """
         with open(path, "rb") as fp:
             config = json.loads(fp.read())
         assert isinstance(config, dict)
@@ -27,8 +31,8 @@ class MockGoogleAuthCredentials:
 
 class TestFirebaseAppCreation(unittest.TestCase):
 
-    def test_authenticate_rejects_invalid_json_uri(self):
-        self.assertRaises(InvalidJSONURI, lambda: authenticate("scheme://"))
+    def test_authenticate_db_rejects_invalid_json_uri(self):
+        self.assertRaises(InvalidJSONURI, lambda: authenticate_db("scheme://"))
 
     def test_firebase_ValueError_when_bad_credentials(self):
         config = {
@@ -41,7 +45,7 @@ class TestFirebaseAppCreation(unittest.TestCase):
         uri = encode_json_uri("firestore", config)
 
         with self.assertRaises(ValueError) as context:
-            authenticate(uri)
+            authenticate_db(uri)
 
         self.assertEqual(
             'Failed to initialize a certificate credential. Caused '
@@ -53,7 +57,7 @@ class TestFirebaseAppCreation(unittest.TestCase):
         uri = encode_json_uri("firestore", config)
 
         with self.assertRaises(ValueError) as context:
-            authenticate(uri)
+            authenticate_db(uri)
 
         self.assertEqual(
             'Invalid service account certificate. Certificate must contain a '
@@ -65,7 +69,7 @@ class TestFirebaseAppCreation(unittest.TestCase):
         uri = encode_json_uri("firestore", config)
 
         with self.assertRaises(MissingProjectId) as context:
-            authenticate(uri)
+            authenticate_db(uri)
 
         self.assertEqual('project_id missing', str(context.exception))
 
@@ -75,7 +79,7 @@ class TestFirebaseAppCreation(unittest.TestCase):
             self, mocked_app, mocked_cert):
         mocked_cert.side_effect = MockGoogleAuthCredentials.from_path
         uri = encode_json_uri("firestore", {"project_id": "some-project-id"})
-        authenticate(uri)
+        authenticate_db(uri)
 
         mocked_app.assert_called_with(
             mock.ANY,
