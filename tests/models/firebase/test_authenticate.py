@@ -3,7 +3,8 @@ import unittest
 from unittest import mock
 
 from springapi.config_helpers import encode_json_uri, InvalidJSONURI
-from springapi.models.firebase.app import authenticate_db, MissingProjectId
+from springapi.models.firebase.authenticate import (
+    authenticate_firebase, MissingProjectId)
 
 
 class MockGoogleAuthCredentials:
@@ -31,8 +32,9 @@ class MockGoogleAuthCredentials:
 
 class TestFirebaseAppCreation(unittest.TestCase):
 
-    def test_authenticate_db_rejects_invalid_json_uri(self):
-        self.assertRaises(InvalidJSONURI, lambda: authenticate_db("scheme://"))
+    def test_authenticate_firebase_rejects_invalid_json_uri(self):
+        self.assertRaises(
+            InvalidJSONURI, lambda: authenticate_firebase("scheme://"))
 
     def test_firebase_ValueError_when_bad_credentials(self):
         config = {
@@ -45,7 +47,7 @@ class TestFirebaseAppCreation(unittest.TestCase):
         uri = encode_json_uri("firestore", config)
 
         with self.assertRaises(ValueError) as context:
-            authenticate_db(uri)
+            authenticate_firebase(uri)
 
         self.assertEqual(
             'Failed to initialize a certificate credential. Caused '
@@ -57,29 +59,30 @@ class TestFirebaseAppCreation(unittest.TestCase):
         uri = encode_json_uri("firestore", config)
 
         with self.assertRaises(ValueError) as context:
-            authenticate_db(uri)
+            authenticate_firebase(uri)
 
         self.assertEqual(
             'Invalid service account certificate. Certificate must contain a '
             '"type" field set to "service_account".',
             str(context.exception))
 
-    def test_authenticate_raises_MissingProjectId_when_field_missing(self):
+    def test_authenticate_firebase_raises_MissingProjectId_field_missing(self):
         config = {}
         uri = encode_json_uri("firestore", config)
 
         with self.assertRaises(MissingProjectId) as context:
-            authenticate_db(uri)
+            authenticate_firebase(uri)
 
         self.assertEqual('project_id missing', str(context.exception))
 
-    @mock.patch('springapi.models.firebase.app.auth.credentials.Certificate')
-    @mock.patch('springapi.models.firebase.app.auth.initialize_app')
-    def test_authenticate_returns_configured_firebase_instance(
+    @mock.patch(
+        'springapi.models.firebase.authenticate.auth.credentials.Certificate')
+    @mock.patch('springapi.models.firebase.authenticate.auth.initialize_app')
+    def test_authenticate_firebase_returns_configured_firebase_instance(
             self, mocked_app, mocked_cert):
         mocked_cert.side_effect = MockGoogleAuthCredentials.from_path
         uri = encode_json_uri("firestore", {"project_id": "some-project-id"})
-        authenticate_db(uri)
+        authenticate_firebase(uri)
 
         mocked_app.assert_called_with(
             mock.ANY,

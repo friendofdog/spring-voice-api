@@ -3,8 +3,9 @@ import os
 from flask import Flask
 
 from springapi.config_helpers import decode_json_uri
-from springapi.helpers import VALID_USERS, AUTH, register
-from springapi.models.firebase.app import authenticate_db
+from springapi.helpers import TOKENS, AUTH, USERS, register
+from springapi.models.firebase.authenticate import authenticate_firebase
+from springapi.models.users import get_users
 from springapi.routes.healthcheck import healthcheck
 from springapi.routes.submissions import (
     get_all, get_single, create_single, update_single)
@@ -17,9 +18,16 @@ def create_database_instance(config):
     scheme, _ = decode_json_uri(database_uri)
 
     if scheme == "firestore":
-        return authenticate_db(database_uri)
+        return authenticate_firebase(database_uri)
     else:
         raise ValueError(f"Unknown database protocol: {scheme}")
+
+
+def get_authorized_users(config):
+    user_db_uri = config["USERS"]
+    scheme, _ = decode_json_uri(user_db_uri)
+
+    return get_users(scheme, user_db_uri)
 
 
 def get_auth_credentials(config):
@@ -35,8 +43,9 @@ def get_auth_credentials(config):
 def create_app(config):
     config.setdefault("ENV", config.get("FLASK_ENV", "testing"))
     config.setdefault("DEBUG", config["ENV"] == "development")
-    assert VALID_USERS in config
+    assert TOKENS in config
     assert AUTH in config
+    assert USERS in config
 
     app = Flask(__name__)
 
@@ -56,6 +65,8 @@ def create_app(config):
 def main(environ):
     app = create_app(environ)
     create_database_instance(environ)
+    users = get_authorized_users(environ)
+    print(users)
     get_auth_credentials(environ)
     app.run(host='0.0.0.0', port=5000)
 

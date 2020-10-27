@@ -1,4 +1,4 @@
-from firebase_admin import firestore  # type: ignore
+from firebase_admin import firestore, auth  # type: ignore
 from google.api_core import exceptions as google_exceptions  # type: ignore
 from springapi.exceptions import \
     CollectionNotFound, EntryAlreadyExists, EntryNotFound, ValidationError
@@ -48,3 +48,9 @@ def update_entry(collection, data, entry_id):
         return {'success': f'{entry_id} updated in {collection}'}
     except google_exceptions.NotFound:
         raise EntryNotFound(entry_id, collection)
+
+
+def get_firebase_users():
+    user_list = auth.list_users()
+    users = [u.email for u in user_list.users]
+    return users

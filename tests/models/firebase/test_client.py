@@ -1,18 +1,18 @@
 import unittest
 from mockfirestore import MockFirestore
-from springapi.exceptions import \
-    CollectionNotFound, EntryAlreadyExists, EntryNotFound, ValidationError
-from springapi.models.firebase.client \
-    import get_collection, get_entry, add_entry, update_entry
+from springapi.exceptions import (
+    CollectionNotFound, EntryAlreadyExists, EntryNotFound, ValidationError)
+from springapi.models.firebase.client import (
+    get_collection, get_entry, add_entry, update_entry, get_firebase_users)
 from tests.helpers import populate_mock_submissions
 from unittest import mock
 
 
 @mock.patch('springapi.models.firebase.client.firestore.client')
-class TestFirebaseCalls(unittest.TestCase):
+class TestFirestoreCalls(unittest.TestCase):
 
     def __init__(self, *args, **kwargs):
-        super(TestFirebaseCalls, self).__init__(*args, **kwargs)
+        super(TestFirestoreCalls, self).__init__(*args, **kwargs)
         self.entries = {
             "1": {"name": "Some Guy", "message": "Hi there"},
             "2": {"name": "Another Fellow", "message": "Goodbye"}
@@ -112,3 +112,34 @@ class TestFirebaseCalls(unittest.TestCase):
             context.exception.error_response_body(),
             EntryNotFound(entry_id, collection).error_response_body()
         )
+
+
+class MockFirebaseUser:
+
+    def __init__(self, i):
+        self.email = f"foo{i}@example.com"
+
+
+class MockFirebaseUserList:
+
+    def __init__(self, i):
+        self.users = self.create_users(i)
+
+    def create_users(self, count):
+        return [MockFirebaseUser(i) for i in range(count)]
+
+
+@mock.patch('springapi.models.firebase.client.auth.list_users')
+class TestFirebaseCalls(unittest.TestCase):
+
+    def test_get_firebase_users_returns_list_of_users(self, mock_get):
+        mock_get.return_value = MockFirebaseUserList(3)
+        expected = ['foo0@example.com', 'foo1@example.com', 'foo2@example.com']
+        user_list = get_firebase_users()
+        self.assertEqual(user_list, expected)
+
+    def test_get_firebase_users_returns_empty_list(self, mock_get):
+        mock_get.return_value = MockFirebaseUserList(0)
+        expected = []
+        user_list = get_firebase_users()
+        self.assertEqual(user_list, expected)
