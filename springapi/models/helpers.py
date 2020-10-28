@@ -4,6 +4,31 @@ from springapi.exceptions import ValidationError
 from typing import Dict, List, Any
 
 
+class ApiObjectModel:
+
+    _fields: Dict[str, Any] = {}
+
+    def __init__(self, field_data, **fields):
+        self.fields = field_data
+        for f in fields:
+            setattr(self, f, fields[f])
+
+    def __eq__(self, other):
+        if not isinstance(other, ApiObjectModel):
+            return False
+        return self.to_json() == other.to_json()
+
+    @classmethod
+    def from_json(cls, user_data: Dict[str, Any]) -> "ApiObjectModel":
+        validate_data(user_data, cls._fields)
+        populated = set_defaults(user_data, cls._fields)
+        return cls(cls._fields, **populated)
+
+    def to_json(self):
+        json = dict([(k, getattr(self, k)) for k in self.fields.keys()])
+        return json
+
+
 def create_uid():
     raw_uid = uuid.uuid4().bytes
     uid_base32 = \
