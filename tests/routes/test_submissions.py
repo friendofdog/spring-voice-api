@@ -180,7 +180,7 @@ class TestSubmissionsRouteGetSingle(RouteResponseAssertions):
             credentials={"Authorization": "Bearer abc"})
 
 
-@mock.patch('springapi.models.submission._create_uid')
+@mock.patch('springapi.models.submission.create_uid')
 @mock.patch('springapi.models.firebase.client.add_entry')
 class TestSubmissionsRouteCreate(RouteResponseAssertions):
 

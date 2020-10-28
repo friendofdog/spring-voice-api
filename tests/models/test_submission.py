@@ -137,7 +137,7 @@ class TestSubmissionGetSingleSubmission(SubmissionResponseAssertions):
         self.assert_get_single_submission_raises_not_found(entry_id)
 
 
-@mock.patch('springapi.models.submission._create_uid')
+@mock.patch('springapi.models.submission.create_uid')
 class TestSubmissionCreateSubmission(SubmissionResponseAssertions):
 
     @mock.patch('springapi.models.firebase.client.add_entry')

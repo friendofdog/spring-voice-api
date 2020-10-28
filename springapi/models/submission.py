@@ -1,7 +1,6 @@
-import base64
-import uuid
 import springapi.models.firebase.client as client
 from springapi.exceptions import ValidationError
+from springapi.models.helpers import create_uid, set_defaults, validate_data
 from typing import Dict, List, Any
 
 
@@ -16,54 +15,6 @@ FIELDS = {
     'name': {'isRequired': True, 'type': str, 'default': ''},
     'id': {'isRequired': True, 'type': str, 'default': ''}
 }
-
-
-def _create_uid():
-    raw_uid = uuid.uuid4().bytes
-    uid_base32 = \
-        base64.b32encode(raw_uid).decode('ascii').rsplit("=")[0].lower()
-    return uid_base32
-
-
-def _set_defaults(data: Dict[str, Any]) -> Dict[str, Any]:
-    for field_name, field_settings in FIELDS.items():
-        data.setdefault(field_name, field_settings["default"])
-    return data
-
-
-def _check_disallowed_fields(data: Dict[str, Any]) -> List[str]:
-    disallowed = sorted([d for d in data if d not in FIELDS.keys()])
-    return disallowed
-
-
-def _check_required_fields(data: Dict[str, Any]) -> List[str]:
-    required = [f for f in FIELDS if
-                FIELDS[f]['isRequired'] is True]
-    missing = sorted(list(set(required) - set(list(data.keys()))))
-    return missing
-
-
-def _check_type(data: Dict[str, Any]) -> List[str]:
-    bad_types = sorted([d for d in data if d in FIELDS.keys() and
-                        type(data[d]) is not FIELDS[d]['type']])
-    return bad_types
-
-
-def _validate_data(data: Dict[str, Any]) -> None:
-    disallowed = _check_disallowed_fields(data)
-    if disallowed:
-        raise ValidationError(f'Not allowed: {", ".join(disallowed)}')
-
-    missing = _check_required_fields(data)
-    if missing:
-        raise ValidationError(f'Missing: {", ".join(missing)}')
-
-    bad_types = _check_type(data)
-    if bad_types:
-        type_errors = [f'{e} is {str(type(data[e]))}, should be '
-                       f'{str(FIELDS[e]["type"])}.'
-                       for e in bad_types]
-        raise ValidationError(" ".join(type_errors))
 
 
 class Submission:
@@ -81,8 +32,8 @@ class Submission:
 
     @classmethod
     def from_json(cls, submission_data: Dict[str, Any]) -> "Submission":
-        _validate_data(submission_data)
-        populated = _set_defaults(submission_data)
+        validate_data(submission_data, FIELDS)
+        populated = set_defaults(submission_data, FIELDS)
         return cls(
             identifier=populated["id"],
             name=populated["name"],
@@ -132,9 +83,9 @@ class Submission:
 
     @classmethod
     def create_submission(cls, data: Dict[str, Any]) -> "Submission":
-        data["id"] = _create_uid()
-        _validate_data(data)
-        data = _set_defaults(data)
+        data["id"] = create_uid()
+        validate_data(data, FIELDS)
+        data = set_defaults(data, FIELDS)
 
         response = client.add_entry(COLLECTION, data.copy())
         result = response[data["id"]]
@@ -145,8 +96,8 @@ class Submission:
     def update_submission(
             cls, entry_id: str, data: Dict[str, Any]) -> "Submission":
         data["id"] = entry_id
-        _validate_data(data)
-        data = _set_defaults(data)
+        validate_data(data, FIELDS)
+        data = set_defaults(data, FIELDS)
 
         response = client.update_entry(COLLECTION, data.copy(), entry_id)
         return response
