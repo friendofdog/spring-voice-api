@@ -1,10 +1,11 @@
 import unittest
 from springapi.models.user import User
+from springapi.exceptions import EntryNotFound, ValidationError
 from unittest import mock
 
 
 @mock.patch('springapi.models.firebase.client.get_collection')
-class TestUsers(unittest.TestCase):
+class TestUserGetUsers(unittest.TestCase):
 
     def __init__(self, _):
         super().__init__(_)
@@ -26,6 +27,12 @@ class TestUsers(unittest.TestCase):
                 "email": "hussle@bustle",
                 "isAdmin": False,
                 "token": "789"
+            },
+            "mno": {
+                "email": "koki@koko",
+                "isAdmin": False,
+                "token": "789",
+                "badField": "should not be here"
             }
         }
         self.valid = [
@@ -49,3 +56,30 @@ class TestUsers(unittest.TestCase):
         users = User.get_users('token', '789')
         self.assertEqual([self.entries["jkl"]], [u.to_json() for u in users])
         mock_get.assert_called_with("users", "token", "789")
+
+
+class TestUserUpdateUser(unittest.TestCase):
+
+    @mock.patch('springapi.models.firebase.client.update_entry')
+    def test_update_user_returns_success_if_found_and_valid(self, mocked):
+        entry_id = "pqr"
+        data = {"email": "dot@com", "isAdmin": False, "token": "357"}
+        expected = mocked.return_value = {'success': f'{entry_id} updated'}
+        self.assertEqual(expected, User.update_user(entry_id, data))
+        mocked.assert_called_with("users", data, entry_id)
+
+    @mock.patch('springapi.models.firebase.client.update_entry')
+    def test_update_user_raises_EntryNotFound(self, mock_update):
+        entry_id = "pqr"
+        err = mock_update.side_effect = EntryNotFound(entry_id, "users")
+        data = {"email": "dot@com", "isAdmin": False, "token": "357"}
+        with self.assertRaises(EntryNotFound) as context:
+            User.update_user(entry_id, data)
+        expected = context.exception.error_response_body()
+        self.assertEqual(expected, err.error_response_body())
+
+    def test_update_user_raises_ValidationError(self):
+        with self.assertRaises(ValidationError) as context:
+            User.update_user("pqr", {"email": "dot@com", "token": "357"})
+        expected = context.exception.error_response_body()
+        self.assertEqual(expected, {"error": "Missing: isAdmin"})

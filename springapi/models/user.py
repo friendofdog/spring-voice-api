@@ -1,7 +1,8 @@
 from springapi.exceptions import ValidationError
 from springapi.models.firebase import client
-from springapi.models.helpers import ApiObjectModel
-from typing import List
+from springapi.models.helpers import (
+    ApiObjectModel, validate_data, set_defaults)
+from typing import Dict, List, Any
 
 
 COLLECTION = "users"
@@ -32,3 +33,13 @@ class User(ApiObjectModel):
             except ValidationError:
                 continue
         return users
+
+    @classmethod
+    def update_user(cls, entry_id: str, data: Dict[str, Any]
+                    ) -> "ApiObjectModel":
+        data["id"] = entry_id
+        validate_data(data, cls._fields)
+        data = set_defaults(data, cls._fields)
+
+        response = client.update_entry(COLLECTION, data.copy(), entry_id)
+        return response
