@@ -1,8 +1,11 @@
 from springapi.exceptions import \
     CollectionNotFound, EntryNotFound, EntryAlreadyExists, ValidationError
 from springapi.models.submission import Submission
-from tests.helpers import RouteResponseAssertions, MOCK_TOKENS
+from tests.helpers import RouteResponseAssertions
 from unittest import mock
+
+
+MOCK_TOKENS = ["abc", "def"]
 
 
 @mock.patch('springapi.helpers.get_valid_admin_tokens')

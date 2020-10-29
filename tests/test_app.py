@@ -1,30 +1,24 @@
 import unittest
 from springapi.app import (
     create_app, create_database_instance, create_user_database_instance)
-from springapi.helpers import TOKENS, AUTH, USERS
-from tests.helpers import MOCK_TOKENS
+from springapi.helpers import AUTH, USERS
 from unittest import mock
 
 
 class TestSpringapiAppCreation(unittest.TestCase):
 
     def test_springapi_defaults_to_testing(self):
-        app = create_app({TOKENS: "TOKEN", AUTH: "abc", USERS: ["a"]})
+        app = create_app({AUTH: "abc", USERS: ["a"]})
         app_env = app.config
         self.assertEqual(app_env['ENV'], 'testing')
 
-    def test_springapi_raises_AssertionError_if_valid_users_missing(self):
+    def test_springapi_raises_AssertionError_if_auth_var_missing(self):
         with self.assertRaises(AssertionError):
             create_app({AUTH: "abc"})
 
-    def test_springapi_raises_AssertionError_if_auth_missing(self):
-        with self.assertRaises(AssertionError):
-            create_app({TOKENS: "abc"})
-
     def test_springapi_dev_env_enables_debug(self):
         app = create_app({
-            "FLASK_ENV": "development",
-            TOKENS: MOCK_TOKENS, AUTH: "abc", USERS: ["A"]})
+            "FLASK_ENV": "development", AUTH: "abc", USERS: ["A"]})
         app_env = app.config
         self.assertEqual(app_env['ENV'], 'development')
         self.assertEqual(app_env['DEBUG'], True)

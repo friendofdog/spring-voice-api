@@ -11,7 +11,6 @@ test:
 run:
 	@set -a && set +a && \
 	export DATABASE_URI=$(shell python3 -m bin.config --protocol=firestore $(DB)) && \
-	export TOKENS=$(shell python3 -m bin.config $(TOKENS)) && \
 	export AUTH=$(shell python3 -m bin.config --protocol=google $(AUTH)) && \
 	export USERS=$(shell python3 -m bin.config --protocol=firebase $(USERS)) && \
 	python3 -m springapi.app

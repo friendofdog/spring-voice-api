@@ -4,13 +4,10 @@ import unittest
 from mockfirestore import MockFirestore  # type: ignore
 from springapi.app import create_app
 from springapi.config_helpers import encode_json_uri
-from springapi.helpers import TOKENS, AUTH, USERS
+from springapi.helpers import AUTH, USERS
 from springapi.exceptions import \
     EntryNotFound, CollectionNotFound, ValidationError, EntryAlreadyExists
 from springapi.models.submission import Submission
-
-
-MOCK_TOKENS = {"admin_tokens": ['abc', 'def']}
 
 
 class SubmissionResponseAssertions(unittest.TestCase):
@@ -90,7 +87,6 @@ class RouteResponseAssertions(unittest.TestCase):
             self, method, path, expected_code, expected_response, body=None,
             credentials=None, config=None):
         request_headers = {}
-        config = config if config is not None else {TOKENS: MOCK_TOKENS}
         request_headers.update(credentials if credentials is not None else {})
         with make_test_client(config) as client:
             call = getattr(client, method)
@@ -223,7 +219,6 @@ def populate_mock_submissions(entries):
 def make_test_client(environ=None):
     environ = environ or {}
     environ.setdefault("DATABASE_URI", encode_json_uri("firestore", {}))
-    environ.setdefault(TOKENS, MOCK_TOKENS)
     environ.setdefault(AUTH, "abc")
     environ.setdefault(USERS, ["a"])
     app = create_app(environ)

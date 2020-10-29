@@ -4,7 +4,7 @@ import firebase_admin as admin  # type: ignore
 from flask import Flask
 
 from springapi.config_helpers import decode_json_uri
-from springapi.helpers import TOKENS, AUTH, USERS, register
+from springapi.helpers import AUTH, USERS, register
 from springapi.models.firebase.authenticate import authenticate_firebase
 from springapi.routes.healthcheck import healthcheck
 from springapi.routes.submissions import (
@@ -50,7 +50,6 @@ def get_auth_credentials(config):
 def create_app(config):
     config.setdefault("ENV", config.get("FLASK_ENV", "testing"))
     config.setdefault("DEBUG", config["ENV"] == "development")
-    assert TOKENS in config
     assert AUTH in config
     assert USERS in config
 
