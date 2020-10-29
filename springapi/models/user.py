@@ -11,6 +11,7 @@ class User(ApiObjectModel):
 
     _fields = {
         'id': {'isRequired': True, 'type': str, 'default': ''},
+        'isAdmin': {'isRequired': True, 'type': bool, 'default': False},
         'email': {'isRequired': True, 'type': str, 'default': ''},
         'token': {'isRequired': False, 'type': str, 'default': ''}
     }
@@ -20,8 +21,9 @@ class User(ApiObjectModel):
         self.fields = field_data
 
     @classmethod
-    def get_users(cls) -> List["ApiObjectModel"]:
-        response = client.get_collection(COLLECTION)
+    def get_users(cls, field: str = None, value: str = None
+                  ) -> List["ApiObjectModel"]:
+        response = client.get_collection(COLLECTION, field, value)
         users = []
         for result_id, result in response.items():
             result["id"] = result_id
