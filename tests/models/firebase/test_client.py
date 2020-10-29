@@ -35,7 +35,24 @@ class TestFirestoreCalls(unittest.TestCase):
 
         response = get_collection('submissions')
         self.assertTrue(response)
-        self.assertEqual(response['1'], self.entries['1'])
+        self.assertDictEqual(response, self.entries)
+
+    def test_get_collection_returns_filtered_collection_given_field_value(
+            self, mock_client):
+        mock_client.return_value = populate_mock_submissions(self.entries)
+
+        response = get_collection('submissions', 'message', 'Goodbye')
+        self.assertTrue(response)
+        self.assertNotIn("1", response.keys())
+        self.assertDictEqual(response["2"], self.entries["2"])
+
+    def test_get_collection_returns_whole_collection_given_single_arg(
+            self, mock_client):
+        mock_client.return_value = populate_mock_submissions(self.entries)
+
+        response = get_collection('submissions', 'message')
+        self.assertTrue(response)
+        self.assertDictEqual(response, self.entries)
 
     def test_get_entry_raises_EntryNotFound(self, mock_client):
         mock_client.return_value = populate_mock_submissions(self.entries)

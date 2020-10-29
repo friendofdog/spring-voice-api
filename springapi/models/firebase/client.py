@@ -4,9 +4,13 @@ from springapi.exceptions import \
     CollectionNotFound, EntryAlreadyExists, EntryNotFound, ValidationError
 
 
-def get_collection(collection):
+def get_collection(collection, field=None, value=None):
     client = firestore.client()
-    response = client.collection(f'{collection}')
+    if field and value:
+        response = client.collection(
+            f'{collection}').where(f'{field}', u'==', f'{value}')
+    else:
+        response = client.collection(f'{collection}')
     collection_obj = {}
     for r in response.stream():
         collection_obj[r.id] = r.to_dict()
