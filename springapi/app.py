@@ -1,11 +1,11 @@
 import os
+import firebase_admin as admin  # type: ignore
 
 from flask import Flask
 
 from springapi.config_helpers import decode_json_uri
 from springapi.helpers import TOKENS, AUTH, USERS, register
 from springapi.models.firebase.authenticate import authenticate_firebase
-from springapi.models.users import get_users
 from springapi.routes.healthcheck import healthcheck
 from springapi.routes.submissions import (
     get_all, get_single, create_single, update_single)
@@ -23,11 +23,18 @@ def create_database_instance(config):
         raise ValueError(f"Unknown database protocol: {scheme}")
 
 
-def get_authorized_users(config):
-    user_db_uri = config["USERS"]
-    scheme, _ = decode_json_uri(user_db_uri)
+def create_user_database_instance(config):
+    database_uri = config["USERS"]
+    scheme, _ = decode_json_uri(database_uri)
 
-    return get_users(scheme, user_db_uri)
+    if scheme == "firebase":
+        if not admin.get_app():
+            return authenticate_firebase(database_uri)
+        else:
+            return "Skipping user database instantiation. "\
+                   f"{scheme} database instance already created"
+    else:
+        raise ValueError(f"Unknown user database protocol: {scheme}")
 
 
 def get_auth_credentials(config):
@@ -65,8 +72,7 @@ def create_app(config):
 def main(environ):
     app = create_app(environ)
     create_database_instance(environ)
-    users = get_authorized_users(environ)
-    print(users)
+    create_user_database_instance(environ)
     get_auth_credentials(environ)
     app.run(host='0.0.0.0', port=5000)
 
