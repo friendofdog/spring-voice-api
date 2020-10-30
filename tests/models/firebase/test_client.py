@@ -3,7 +3,7 @@ from mockfirestore import MockFirestore
 from springapi.exceptions import (
     CollectionNotFound, EntryAlreadyExists, EntryNotFound, ValidationError)
 from springapi.models.firebase.client import (
-    get_collection, get_entry, add_entry, update_entry, get_firebase_users)
+    get_collection, get_entry, add_entry, update_entry, get_email_addresses)
 from tests.helpers import populate_mock_submissions
 from unittest import mock
 
@@ -149,14 +149,14 @@ class MockFirebaseUserList:
 @mock.patch('springapi.models.firebase.client.auth.list_users')
 class TestFirebaseCalls(unittest.TestCase):
 
-    def test_get_firebase_users_returns_list_of_users(self, mock_get):
+    def test_get_email_addresses_returns_list_of_users(self, mock_get):
         mock_get.return_value = MockFirebaseUserList(3)
         expected = ['foo0@example.com', 'foo1@example.com', 'foo2@example.com']
-        user_list = get_firebase_users()
+        user_list = get_email_addresses()
         self.assertEqual(user_list, expected)
 
-    def test_get_firebase_users_returns_empty_list(self, mock_get):
+    def test_get_email_addresses_returns_empty_list(self, mock_get):
         mock_get.return_value = MockFirebaseUserList(0)
         expected = []
-        user_list = get_firebase_users()
+        user_list = get_email_addresses()
         self.assertEqual(user_list, expected)

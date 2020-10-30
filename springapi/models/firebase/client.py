@@ -54,7 +54,7 @@ def update_entry(collection, data, entry_id):
         raise EntryNotFound(entry_id, collection)
 
 
-def get_firebase_users():
+def get_email_addresses():
     user_list = auth.list_users()
     users = [u.email for u in user_list.users]
     return users
