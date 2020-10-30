@@ -1,5 +1,5 @@
 import json
-from springapi.auth.authorization import get_auth_code, exchange_token
+from springapi.models.authorization import get_auth_code, exchange_token
 from springapi.exceptions import AuthorizationError
 from springapi.helpers import make_route, VERSION
 from flask import request

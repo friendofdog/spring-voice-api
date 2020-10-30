@@ -1,4 +1,4 @@
-from springapi.auth.models.google import (
+from springapi.models.google.client import (
     request_auth_code as client_get_auth,
     exchange_auth_token as client_get_token)
 from springapi.exceptions import AuthorizationError, AuthProviderResponseError

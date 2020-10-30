@@ -1,6 +1,6 @@
 import requests
 import unittest
-from springapi.auth.models.local import (
+from springapi.models.local.client import (
     request_auth_code, exchange_auth_token)
 from unittest import mock
 

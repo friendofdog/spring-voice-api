@@ -1,11 +1,10 @@
 import unittest
-from springapi.auth.authorization import (
-    get_auth_code, exchange_token)
+from springapi.models.authorization import get_auth_code, exchange_token
 from springapi.exceptions import AuthorizationError, AuthProviderResponseError
 from unittest import mock
 
 
-@mock.patch('springapi.auth.authorization.client_get_auth')
+@mock.patch('springapi.models.authorization.client_get_auth')
 class TestAuthorization(unittest.TestCase):
 
     def test_get_auth_code_returns_success(self, mock_resp):
@@ -20,7 +19,7 @@ class TestAuthorization(unittest.TestCase):
         self.assertEqual(str(context.exception), "blah")
 
 
-@mock.patch('springapi.auth.authorization.client_get_token')
+@mock.patch('springapi.models.authorization.client_get_token')
 class TestToken(unittest.TestCase):
 
     def test_exchange_token_returns_success(self, mock_resp):

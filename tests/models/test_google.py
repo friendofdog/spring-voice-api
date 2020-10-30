@@ -1,6 +1,6 @@
 import requests
 import unittest
-from springapi.auth.models.google import (
+from springapi.models.google.client import (
     request_auth_code, exchange_auth_token, AuthProviderResponseError)
 from unittest import mock
 
