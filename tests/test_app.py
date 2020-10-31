@@ -1,6 +1,7 @@
 import unittest
 from springapi.app import (
-    create_app, create_database_instance, create_user_database_instance)
+    create_app, create_database_instance, create_user_database_instance,
+    verify_auth_credentials)
 from springapi.helpers import AUTH, USERS
 from unittest import mock
 
@@ -83,3 +84,20 @@ class TestSpringapiAppCreation(unittest.TestCase):
 
         self.assertEqual(str(context.exception),
                          f'Unknown user database protocol: {scheme}')
+
+    def test_verify_auth_credentials_passes_if_scheme_found(self):
+        scheme = 'google'
+        config = {'AUTH': f'{scheme}://ImFiY2RlIg=='}
+
+        response = verify_auth_credentials(config)
+        self.assertIsNone(response)
+
+    def test_verify_auth_credentials_raises_ValueError_scheme_not_found(self):
+        scheme = 'badscheme'
+        config = {'AUTH': f'{scheme}://ImFiY2RlIg=='}
+
+        with self.assertRaises(ValueError) as context:
+            verify_auth_credentials(config)
+
+        self.assertEqual(str(context.exception),
+                         f"Unknown authorization protocol: {scheme}")

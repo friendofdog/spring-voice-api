@@ -1,27 +1,28 @@
 import requests
 import unittest
 from springapi.models.google.client import (
-    request_auth_code, exchange_auth_token, AuthProviderResponseError)
+    create_auth_request, exchange_auth_token, AuthProviderResponseError)
 from unittest import mock
 
 
-@mock.patch.object(requests, "get")
 class TestGoogleAuthorization(unittest.TestCase):
 
-    def test_request_auth_code_returns_code(self, mock_get):
-        mock_get.return_value.status_code = 200
-        response = request_auth_code({"client_id": "123"})
-        self.assertEqual(response, {"success": True})
+    def test_create_auth_request_returns_url_string(self):
+        expected = "https://accounts.google.com/o/oauth2/v2/auth?client_id=" \
+                   "abc&redirect_uri=" \
+                   "https%3A%2F%2Fexample.comapi%2Fv1%2Fauth-callback&" \
+                   "response_type=code&scope=https%3A%2F%2Fwww.googleapis" \
+                   ".com%2Fauth%2Fuserinfo.email+https%3A%2F%2Fwww." \
+                   "googleapis.com%2Fauth%2Fuserinfo.profile+"
+        redirect_host = "https://example.com"
+        response = create_auth_request(redirect_host, {"client_id": "abc"})
+        self.assertEqual(response, expected)
 
-    def test_request_auth_code_raises_error_on_bad_response(self, mock_get):
-        mock_get.return_value.status_code = 400
-
+    def test_create_auth_request_raises_KeyError_on_bad_credentials(self):
         with self.assertRaises(AuthProviderResponseError) as context:
-            request_auth_code({"client_id": "123"})
+            create_auth_request("https://example.com", {"bad_key": "123"})
         self.assertEqual(
-            str(context.exception),
-            "Error retrieving auth code from "
-            "https://accounts.google.com/o/oauth2/v2/auth")
+            str(context.exception), "Bad credentials")
 
 
 @mock.patch.object(requests, "post")

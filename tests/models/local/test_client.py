@@ -5,7 +5,7 @@ from springapi.models.local.client import (
 from unittest import mock
 
 
-class TestGoogleAuth(unittest.TestCase):
+class TestLocalAuthorization(unittest.TestCase):
 
     @mock.patch.object(requests, "get")
     def test_request_auth_code_returns_code(self, mock_get):

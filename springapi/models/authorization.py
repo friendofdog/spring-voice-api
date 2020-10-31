@@ -1,15 +1,15 @@
 from springapi.models.google.client import (
-    request_auth_code as client_get_auth,
+    create_auth_request as client_get_auth,
     exchange_auth_token as client_get_token)
 from springapi.exceptions import AuthorizationError, AuthProviderResponseError
 
 
-def get_auth_code(params):
+def get_auth_code_uri(redirect_host, credentials):
     try:
-        client_get_auth(params)
+        redirect = client_get_auth(redirect_host, credentials)
     except AuthProviderResponseError as e:
         raise AuthorizationError(e)
-    return {"success": True}
+    return redirect
 
 
 def exchange_token(params):

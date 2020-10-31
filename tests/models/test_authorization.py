@@ -1,5 +1,5 @@
 import unittest
-from springapi.models.authorization import get_auth_code, exchange_token
+from springapi.models.authorization import get_auth_code_uri, exchange_token
 from springapi.exceptions import AuthorizationError, AuthProviderResponseError
 from unittest import mock
 
@@ -7,15 +7,15 @@ from unittest import mock
 @mock.patch('springapi.models.authorization.client_get_auth')
 class TestAuthorization(unittest.TestCase):
 
-    def test_get_auth_code_returns_success(self, mock_resp):
+    def test_get_auth_code_uri_returns_success(self, mock_resp):
         expected = mock_resp.return_value = {"success": True}
-        response = get_auth_code({"foo": "bar"})
+        response = get_auth_code_uri({"foo": "bar"}, {"client_id": "abc"})
         self.assertEqual(response, expected)
 
-    def test_get_auth_code_raises_error_on_bad_requst(self, mock_resp):
+    def test_get_auth_code_uri_raises_error_on_bad_requst(self, mock_resp):
         mock_resp.side_effect = AuthProviderResponseError("blah")
         with self.assertRaises(AuthorizationError) as context:
-            get_auth_code({"foo": "bar"})
+            get_auth_code_uri({"foo": "bar"}, {"client_id": "abc"})
         self.assertEqual(str(context.exception), "blah")
 
 

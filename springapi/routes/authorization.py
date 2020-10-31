@@ -1,20 +1,19 @@
-import json
-from springapi.models.authorization import get_auth_code, exchange_token
+from springapi.config_helpers import decode_json_uri
+from springapi.models.authorization import get_auth_code_uri, exchange_token
 from springapi.exceptions import AuthorizationError
-from springapi.helpers import make_route, VERSION
-from flask import request
+from springapi.helpers import make_route, VERSION, AUTH
+from flask import redirect, request
 
 
-@make_route(f"/api/{VERSION}/auth", methods=['POST'])
+@make_route(f"/api/{VERSION}/auth", methods=['GET'])
 def request_auth_code(config):
+    _, credentials = decode_json_uri(config[AUTH])
     try:
-        request_data = json.loads(request.data)
-        response = get_auth_code(request_data)
-    except ValueError:
-        return {"error": "Invalid JSON"}, 400
+        redirect_host = f"{request.host_url}"
+        response = get_auth_code_uri(redirect_host, credentials)
     except AuthorizationError as e:
         return {"error": f"Something went wrong with authorization: {e}"}, 400
-    return response, 200
+    return redirect(response), 302
 
 
 @make_route(f"/api/{VERSION}/auth-callback", methods=['GET'])

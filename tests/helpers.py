@@ -85,7 +85,8 @@ class RouteResponseAssertions(unittest.TestCase):
 
     def assert_expected_code_and_response(
             self, method, path, expected_code, expected_response, body=None,
-            credentials=None, config=None):
+            credentials=None, config=None, content_type="application/json"):
+        print(config)
         request_headers = {}
         request_headers.update(credentials if credentials is not None else {})
         with make_test_client(config) as client:
@@ -99,7 +100,7 @@ class RouteResponseAssertions(unittest.TestCase):
             if expected_response is not None:
                 self.assertEqual(response_body, expected_response)
             self.assertEqual(
-                "application/json", r.headers["Content-type"])
+                content_type, r.headers["Content-type"])
 
     def assert_requires_admin_authentication(self, method, path):
         expected_response = {
@@ -138,6 +139,12 @@ class RouteResponseAssertions(unittest.TestCase):
         return self.assert_expected_code_and_response(
             'get', path, '200 OK', expected_response, credentials=credentials)
 
+    def assert_get_returns_redirect(
+            self, path, expected_response=None):
+        return self.assert_expected_code_and_response(
+            'get', path, '302 FOUND', expected_response,
+            content_type="text/html; charset=utf-8")
+
     def assert_get_raises_not_found(
             self, path, expected_response=None, credentials=None):
         return self.assert_expected_code_and_response(
@@ -151,10 +158,9 @@ class RouteResponseAssertions(unittest.TestCase):
             credentials=credentials)
 
     def assert_get_raises_authorization_error(
-            self, path, body, expected_response=None, credentials=None):
+            self, path, expected_response=None):
         return self.assert_expected_code_and_response(
-            'get', path, '400 BAD REQUEST', expected_response,
-            json.dumps(body), credentials=credentials)
+            'get', path, '400 BAD REQUEST', expected_response)
 
     def assert_post_raises_ok(
             self, path, body, expected_response=None, credentials=None):
@@ -219,7 +225,7 @@ def populate_mock_submissions(entries):
 def make_test_client(environ=None):
     environ = environ or {}
     environ.setdefault("DATABASE_URI", encode_json_uri("firestore", {}))
-    environ.setdefault(AUTH, "abc")
+    environ.setdefault(AUTH, "firestore://eyJjbGllbnRfaWQiOiAiYWJjIn0=")
     environ.setdefault(USERS, ["a"])
     app = create_app(environ)
     with app.test_client() as client:

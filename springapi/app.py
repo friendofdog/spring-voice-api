@@ -37,9 +37,9 @@ def create_user_database_instance(config):
         raise ValueError(f"Unknown user database protocol: {scheme}")
 
 
-def get_auth_credentials(config):
+def verify_auth_credentials(config):
     auth_uri = config[AUTH]
-    scheme, json = decode_json_uri(auth_uri)
+    scheme, _ = decode_json_uri(auth_uri)
 
     if scheme == "google":
         pass
@@ -72,7 +72,7 @@ def main(environ):
     app = create_app(environ)
     create_database_instance(environ)
     create_user_database_instance(environ)
-    get_auth_credentials(environ)
+    verify_auth_credentials(environ)
     app.run(host='0.0.0.0', port=5000)
 
 
