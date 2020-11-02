@@ -21,12 +21,12 @@ class TestAuthCallbackRoute(RouteResponseAssertions):
 
     def test_auth_callback_route_exchanges_token(self, mock_auth):
         expected = mock_auth.return_value = {"success": True}
-        self.assert_get_raises_ok(
+        self.assert_post_raises_ok(
             "/api/v1/auth-callback?code=123", expected)
 
     def test_auth_callback_route_raises_authorization_error(self, mock_err):
         pass
-    #     err = mock_err.side_effect = AuthorizationError('Bad token')
-    #     self.assert_get_raises_authorization_error(
-    #         "/api/v1/auth-callback?bad_param=abc", {"foo": "bar"},
-    #         {"error": f"Something went wrong with token exchange: {err}"})
+        err = mock_err.side_effect = AuthorizationError('Bad token')
+        self.assert_post_raises_authorization_error(
+            "/api/v1/auth-callback?bad_param=abc",
+            {"error": f"Something went wrong with token exchange: {err}"})

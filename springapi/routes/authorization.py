@@ -16,7 +16,7 @@ def request_auth_code(config):
     return redirect(response), 302
 
 
-@make_route(f"/api/{VERSION}/auth-callback", methods=['GET'])
+@make_route(f"/api/{VERSION}/auth-callback", methods=['POST'])
 def request_exchange_token(config):
     try:
         code = request.args.get("code")

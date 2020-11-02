@@ -1,7 +1,9 @@
+import json
 import requests
 import unittest
 from springapi.models.google.client import (
-    create_auth_request, exchange_auth_token, AuthProviderResponseError)
+    create_auth_request, exchange_auth_token, AuthProviderResponseError,
+    ValidationError)
 from unittest import mock
 
 
@@ -18,26 +20,42 @@ class TestGoogleAuthorization(unittest.TestCase):
         response = create_auth_request(redirect_host, {"client_id": "abc"})
         self.assertEqual(response, expected)
 
-    def test_create_auth_request_raises_KeyError_on_bad_credentials(self):
-        with self.assertRaises(AuthProviderResponseError) as context:
+    def test_create_auth_request_raises_ValidationError_bad_credentials(self):
+        with self.assertRaises(ValidationError) as context:
             create_auth_request("https://example.com", {"bad_key": "123"})
         self.assertEqual(
             str(context.exception), "Bad credentials")
 
 
-@mock.patch.object(requests, "post")
 class TestGoogleToken(unittest.TestCase):
 
+    @mock.patch.object(requests, "post")
     def test_exchange_auth_token_returns_token(self, mock_post):
-        mock_post.return_value.status_code = 200
-        response = exchange_auth_token('some_auth_code')
-        self.assertEqual(response, {"success": True})
+        expected = mock_post.return_value.content = \
+            b'{"access_token": "12345", "expires_in": 5000}'
+        response = exchange_auth_token(
+            "https://example.com",
+            {"client_id": "abc", "client_secret": "def"},
+            "12345"
+        )
+        self.assertEqual(response, json.loads(expected))
 
-    def test_exchange_auth_token_raises_err_on_bad_response(self, mock_post):
-        mock_post.return_value.status_code = 400
-
+    @mock.patch.object(requests, "post")
+    def test_exchange_auth_token_raises_AuthProviderResponseError(
+            self, mock_post):
+        mock_post.return_value.content = b'{"error": "bad response"}'
         with self.assertRaises(AuthProviderResponseError) as context:
-            exchange_auth_token('some_auth_code')
+            exchange_auth_token(
+                "https://example.com",
+                {"client_id": "abc", "client_secret": "def"},
+                "12345"
+            )
         self.assertEqual(
             str(context.exception),
             "Error retrieving token from https://oauth2.googleapis.com/token")
+
+    def test_exchange_auth_token_raises_ValidationError_bad_credentials(self):
+        with self.assertRaises(ValidationError) as context:
+            exchange_auth_token(
+                "https://example.com", {"client_id": "abc"}, "12345")
+        self.assertEqual(str(context.exception), "Bad credentials")
