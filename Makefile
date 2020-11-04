@@ -6,7 +6,7 @@ all: test lint type-check
 
 test:
 	set -a && set +a && \
-	python3 -m pytest -q
+	python3 -m pytest -q --disable-pytest-warnings
 
 run:
 	@set -a && set +a && \
