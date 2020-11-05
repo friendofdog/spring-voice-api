@@ -12,9 +12,9 @@ def get_auth_code_uri(redirect_host, credentials):
     return redirect
 
 
-def exchange_token(auth_code):
+def exchange_token(auth_code, credentials, redirect_host):
     try:
-        client_get_token(auth_code)
+        client_get_token(auth_code, credentials, redirect_host)
     except AuthProviderResponseError as e:
         raise AuthorizationError(e)
     return {"success": True}

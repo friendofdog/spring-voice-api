@@ -86,7 +86,6 @@ class RouteResponseAssertions(unittest.TestCase):
     def assert_expected_code_and_response(
             self, method, path, expected_code, expected_response, body=None,
             credentials=None, config=None, content_type="application/json"):
-        print(config)
         request_headers = {}
         request_headers.update(credentials if credentials is not None else {})
         with make_test_client(config) as client:
@@ -139,8 +138,8 @@ class RouteResponseAssertions(unittest.TestCase):
         return self.assert_expected_code_and_response(
             'get', path, '200 OK', expected_response, credentials=credentials)
 
-    def assert_get_returns_redirect(
-            self, path, expected_response=None):
+    def assert_get_returns_redirect(self, path):
+        expected_response = None
         return self.assert_expected_code_and_response(
             'get', path, '302 FOUND', expected_response,
             content_type="text/html; charset=utf-8")

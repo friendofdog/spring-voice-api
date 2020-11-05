@@ -24,11 +24,11 @@ class TestToken(unittest.TestCase):
 
     def test_exchange_token_returns_success(self, mock_resp):
         expected = mock_resp.return_value = {"success": True}
-        response = exchange_token({"foo": "bar"})
+        response = exchange_token(b"abc", {"foo": "bar"}, "http://example.com")
         self.assertEqual(response, expected)
 
     def test_exchange_token_raises_error_on_bad_requst(self, mock_resp):
         mock_resp.side_effect = AuthProviderResponseError("no good")
         with self.assertRaises(AuthorizationError) as context:
-            exchange_token({"foo": "bar"})
+            exchange_token(b"abc", {"foo": "bar"}, "http://example.com")
         self.assertEqual(str(context.exception), "no good")
