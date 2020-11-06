@@ -125,14 +125,6 @@ class RouteResponseAssertions(unittest.TestCase):
             method, path, '403 FORBIDDEN', expected_response,
             credentials={"Authorization": "Bearer FOOBAR"})
 
-        expected_response = {
-            "error": "forbidden",
-            "message": "You are not authorized to perform this action"
-        }
-        self.assert_expected_code_and_response(
-            method, path, '403 FORBIDDEN', expected_response,
-            credentials={"Authorization": "Bearer FOOBAR"})
-
     def assert_get_raises_ok(
             self, path, expected_response=None, credentials=None):
         return self.assert_expected_code_and_response(
