@@ -5,6 +5,6 @@ from springapi.models.firebase import client
 class Email(ApiObjectModel):
 
     @classmethod
-    def get_authorised_emails(cls) -> "ApiObjectModel":
+    def get_authorized_emails(cls) -> "ApiObjectModel":
         emails = client.get_email_addresses()
         return emails

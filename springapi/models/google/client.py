@@ -47,4 +47,17 @@ def exchange_auth_token(
     except AssertionError:
         raise AuthProviderResponseError(
             f"Error retrieving token from {token_url}")
-    return token_data
+    return token_data["access_token"]
+
+
+def get_authenticated_user(
+        token, user_url="https://www.googleapis.com/oauth2/v2/userinfo"):
+    full_url = f"{user_url}?access_token={token}"
+    try:
+        response = requests.get(full_url)
+        user_data = json.loads(response.content)
+        assert "email" in user_data
+    except AssertionError:
+        raise AuthProviderResponseError(
+            f"Error retrieving user info from {user_url}")
+    return user_data

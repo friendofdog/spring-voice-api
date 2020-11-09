@@ -8,5 +8,5 @@ class TestUserGetAuthorizedEmails(unittest.TestCase):
 
     def test_get_authorized_emails_returns_email_list(self, mock_addr):
         expected = mock_addr.return_value = ["foo@bar"]
-        email_list = Email.get_authorised_emails()
+        email_list = Email.get_authorized_emails()
         self.assertEqual(email_list, expected)
