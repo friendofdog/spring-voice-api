@@ -1,15 +1,17 @@
 import unittest
+
+from flask import Flask
 from springapi.app import (
     create_app, create_database_instance, create_user_database_instance,
-    verify_auth_credentials)
-from springapi.helpers import AUTH, USERS
+    verify_auth_credentials, create_token_database_instance)
+from springapi.helpers import AUTH, USERS, TOKEN
 from unittest import mock
 
 
 class TestSpringapiAppCreation(unittest.TestCase):
 
     def test_springapi_defaults_to_testing(self):
-        app = create_app({AUTH: "abc", USERS: ["a"]})
+        app = create_app({AUTH: "abc", USERS: ["a"], TOKEN: "sqlite"})
         app_env = app.config
         self.assertEqual(app_env['ENV'], 'testing')
 
@@ -19,7 +21,8 @@ class TestSpringapiAppCreation(unittest.TestCase):
 
     def test_springapi_dev_env_enables_debug(self):
         app = create_app({
-            "FLASK_ENV": "development", AUTH: "abc", USERS: ["A"]})
+            "FLASK_ENV": "development",
+            AUTH: "abc", USERS: ["A"], TOKEN: "sqlite"})
         app_env = app.config
         self.assertEqual(app_env['ENV'], 'development')
         self.assertEqual(app_env['DEBUG'], True)
@@ -87,17 +90,36 @@ class TestSpringapiAppCreation(unittest.TestCase):
 
     def test_verify_auth_credentials_passes_if_scheme_found(self):
         scheme = 'google'
-        config = {'AUTH': f'{scheme}://ImFiY2RlIg=='}
+        config = {AUTH: f'{scheme}://ImFiY2RlIg=='}
 
         response = verify_auth_credentials(config)
         self.assertIsNone(response)
 
     def test_verify_auth_credentials_raises_ValueError_scheme_not_found(self):
         scheme = 'badscheme'
-        config = {'AUTH': f'{scheme}://ImFiY2RlIg=='}
+        config = {AUTH: f'{scheme}://ImFiY2RlIg=='}
 
         with self.assertRaises(ValueError) as context:
             verify_auth_credentials(config)
 
         self.assertEqual(str(context.exception),
                          f"Unknown authorization protocol: {scheme}")
+
+
+class TestTokenDatabaseCreation(unittest.TestCase):
+
+    @mock.patch('springapi.app.db.init_app')
+    def test_create_token_database_instance_calls_init_app(self, mock_db):
+        app = Flask(__name__)
+        config = {TOKEN: "sqlite"}
+        create_token_database_instance(config, app)
+        mock_db.assert_called_with(app)
+
+    def test_create_token_database_instance_ValueError_on_bad_scheme(self):
+        scheme = "bad_scheme"
+        config = {TOKEN: scheme}
+        with self.assertRaises(ValueError) as context:
+            create_token_database_instance(config, "app")
+        self.assertEqual(
+            str(context.exception),
+            f"Unknown token database protocol: {scheme}")

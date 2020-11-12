@@ -4,7 +4,7 @@ import unittest
 from mockfirestore import MockFirestore  # type: ignore
 from springapi.app import create_app
 from springapi.config_helpers import encode_json_uri
-from springapi.helpers import AUTH, USERS
+from springapi.helpers import AUTH, USERS, TOKEN
 from springapi.exceptions import \
     EntryNotFound, CollectionNotFound, ValidationError, EntryAlreadyExists
 from springapi.models.submission import Submission
@@ -218,6 +218,7 @@ def make_test_client(environ=None):
     environ.setdefault("DATABASE_URI", encode_json_uri("firestore", {}))
     environ.setdefault(AUTH, "firestore://eyJjbGllbnRfaWQiOiAiYWJjIn0=")
     environ.setdefault(USERS, ["a"])
+    environ.setdefault(TOKEN, "sqlite")
     app = create_app(environ)
     with app.test_client() as client:
         yield client

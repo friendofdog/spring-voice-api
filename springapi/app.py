@@ -4,13 +4,14 @@ import firebase_admin as admin  # type: ignore
 from flask import Flask
 
 from springapi.config_helpers import decode_json_uri
-from springapi.helpers import AUTH, USERS, register
+from springapi.helpers import AUTH, USERS, TOKEN, register
 from springapi.models.firebase.authenticate import authenticate_firebase
+from springapi.models.sqlite import db
+from springapi.routes.authorization import (
+    request_auth_code, request_exchange_token)
 from springapi.routes.healthcheck import healthcheck
 from springapi.routes.submissions import (
     get_all, get_single, create_single, update_single)
-from springapi.routes.authorization import (
-    request_auth_code, request_exchange_token)
 
 
 def create_database_instance(config):
@@ -47,11 +48,29 @@ def verify_auth_credentials(config):
         raise ValueError(f"Unknown authorization protocol: {scheme}")
 
 
+def create_token_database_instance(config, app):
+    scheme = config[TOKEN]
+
+    if scheme == "sqlite":
+        app.config.from_mapping(
+            TOKEN_DB=os.path.join(app.instance_path, f"token.{scheme}"))
+
+        try:
+            os.makedirs(app.instance_path)
+        except OSError:
+            pass
+
+        db.init_app(app)
+    else:
+        raise ValueError(f"Unknown token database protocol: {scheme}")
+
+
 def create_app(config):
     config.setdefault("ENV", config.get("FLASK_ENV", "testing"))
     config.setdefault("DEBUG", config["ENV"] == "development")
     assert AUTH in config
     assert USERS in config
+    assert TOKEN in config
 
     app = Flask(__name__)
 
@@ -65,6 +84,9 @@ def create_app(config):
     register(app, update_single)
     register(app, request_auth_code)
     register(app, request_exchange_token)
+
+    create_token_database_instance(config, app)
+
     return app
 
 

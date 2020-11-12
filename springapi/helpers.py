@@ -9,6 +9,7 @@ from springapi.models.user import User
 VERSION = "v1"
 AUTH = "AUTH"
 USERS = "USERS"
+TOKEN = "TOKEN"
 
 
 def make_route(*route_args, **route_kwargs):
