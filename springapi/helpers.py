@@ -1,15 +1,10 @@
 import functools
 
 from flask import request
-from springapi.exceptions import pretty_errors, \
-    MissingAuthorization, InvalidAuthHeaderValue, InvalidAuthorization
+from springapi.exceptions import (
+    pretty_errors, MissingAuthorization, InvalidAuthHeaderValue,
+    InvalidAuthorization)
 from springapi.models.user import User
-
-
-VERSION = "v1"
-AUTH = "AUTH"
-USERS = "USERS"
-TOKEN = "TOKEN"
 
 
 def make_route(*route_args, **route_kwargs):

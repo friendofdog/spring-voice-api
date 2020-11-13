@@ -3,16 +3,13 @@ import requests
 import urllib
 
 from springapi.exceptions import AuthProviderResponseError, ValidationError
-from springapi.helpers import VERSION
+from springapi.config_helpers import VERSION
 
 
-def create_auth_request(
-        redirect_host, credentials,
+def create_auth_request_uri(
+        redirect_host, client_id,
         oauth_url="https://accounts.google.com/o/oauth2/v2/auth"):
-    try:
-        client_id = credentials["web"]["client_id"]
-    except KeyError:
-        raise ValidationError("Bad credentials")
+
     params = {
         "access_type": "offline",
         "client_id": client_id,
@@ -21,11 +18,12 @@ def create_auth_request(
         "scope": "https://www.googleapis.com/auth/userinfo.email "
                  "https://www.googleapis.com/auth/userinfo.profile "
     }
+
     full_url = f"{oauth_url}?{urllib.parse.urlencode(params)}"
     return full_url
 
 
-def exchange_auth_token(
+def get_oauth_token(
         auth_code, credentials, redirect_host,
         token_url="https://oauth2.googleapis.com/token"):
     try:
@@ -40,11 +38,11 @@ def exchange_auth_token(
         "client_secret": client_secret,
         "redirect_uri": f"{redirect_host}api/{VERSION}/auth-callback",
         "grant_type": "authorization_code"}
-    try:
-        response = requests.post(token_url, data=data)
-        token_data = json.loads(response.content)
-        assert "access_token" in token_data
-    except AssertionError:
+
+    response = requests.post(token_url, data=data)
+    token_data = json.loads(response.content)
+
+    if "access_token" not in token_data:
         raise AuthProviderResponseError(
             f"Error retrieving token from {token_url}")
     return token_data["access_token"]

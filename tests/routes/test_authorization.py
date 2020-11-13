@@ -10,15 +10,8 @@ class TestAuthRoute(RouteResponseAssertions):
         mock_auth.return_value = "http://example.com"
         self.assert_get_returns_redirect("/api/v1/auth")
 
-    @mock.patch('springapi.routes.authorization.get_auth_code_uri')
-    def test_auth_route_raises_authorization_error(self, mock_err):
-        err = mock_err.side_effect = AuthorizationError('Bad auth')
-        self.assert_get_raises_authorization_error(
-            "/api/v1/auth",
-            {"error": f"Could not retrieve authorization code: {err}"})
 
-
-@mock.patch('springapi.routes.authorization.exchange_oauth_token')
+@mock.patch('springapi.routes.authorization.exchange_token')
 class TestAuthCallbackRoute(RouteResponseAssertions):
 
     def test_auth_callback_route_exchanges_token(self, mock_auth):

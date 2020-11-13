@@ -2,8 +2,8 @@ import json
 import requests
 import unittest
 
-from springapi.models.google.client import (
-    create_auth_request, exchange_auth_token, get_authenticated_user,
+from springapi.utils.google.client import (
+    create_auth_request_uri, get_oauth_token, get_authenticated_user,
     AuthProviderResponseError, ValidationError)
 from unittest import mock
 
@@ -19,21 +19,15 @@ GOOGLE_CREDENTIALS = {
 class TestGoogleAuthorization(unittest.TestCase):
 
     def test_create_auth_request_returns_url_string(self):
-        expected = "https://accounts.google.com/o/oauth2/v2/auth?access_type" \
-                   "=offline&client_id=abc&redirect_uri=https%3A%2F%2Fexampl" \
-                   "e.comapi%2Fv1%2Fauth-callback&response_type=code&scope=h" \
-                   "ttps%3A%2F%2Fwww.googleapis.com%2Fauth%2Fuserinfo.email+" \
-                   "https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fuserinfo.profi" \
-                   "le+"
-        response = create_auth_request(
+        expected_url = "https://accounts.google.com/o/oauth2/v2/auth"
+        expected_params = ['access_type', 'client_id', 'redirect_uri',
+                           'response_type', 'scope']
+        response = create_auth_request_uri(
             "https://example.com", GOOGLE_CREDENTIALS)
-        self.assertEqual(response, expected)
-
-    def test_create_auth_request_raises_ValidationError_bad_credentials(self):
-        with self.assertRaises(ValidationError) as context:
-            create_auth_request("https://example.com", {"bad_key": "123"})
-        self.assertEqual(
-            str(context.exception), "Bad credentials")
+        url, param_str = response.split("?")
+        params = [s.split("=")[0] for s in param_str.split("&")]
+        self.assertEqual(url, expected_url)
+        self.assertListEqual(params, expected_params)
 
 
 @mock.patch.object(requests, "post")
@@ -42,7 +36,7 @@ class TestGoogleToken(unittest.TestCase):
     def test_exchange_auth_token_returns_token(self, mock_post):
         expected = mock_post.return_value.content = \
             b'{"access_token": "12345", "expires_in": 5000}'
-        response = exchange_auth_token(
+        response = get_oauth_token(
             {"code": "1234"}, GOOGLE_CREDENTIALS, "https://example.com")
         self.assertEqual(response, json.loads(expected)["access_token"])
 
@@ -51,7 +45,7 @@ class TestGoogleToken(unittest.TestCase):
         mock_post.return_value.content = b'{"error": "bad response"}'
         token_url = "https://someoauthprovider.com"
         with self.assertRaises(AuthProviderResponseError) as context:
-            exchange_auth_token(
+            get_oauth_token(
                 {"code": "1234"}, GOOGLE_CREDENTIALS, "https://example.com",
                 token_url)
         self.assertEqual(
@@ -62,7 +56,7 @@ class TestGoogleToken(unittest.TestCase):
             self, mock_post):
         mock_post.return_value.content = b'{"error": "bad response"}'
         with self.assertRaises(ValidationError) as context:
-            exchange_auth_token(
+            get_oauth_token(
                 "https://example.com", {"web": {"bad": "creds"}}, "12345")
         self.assertEqual(str(context.exception), "Bad credentials")
 

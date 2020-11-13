@@ -2,11 +2,11 @@ import contextlib
 import json
 import unittest
 from mockfirestore import MockFirestore  # type: ignore
-from springapi.app import create_app
-from springapi.config_helpers import encode_json_uri
-from springapi.helpers import AUTH, USERS, TOKEN
-from springapi.exceptions import \
-    EntryNotFound, CollectionNotFound, ValidationError, EntryAlreadyExists
+from springapi.app import create_app, create_config
+from springapi.config_helpers import (
+    AUTH, CLIENT_ID, USERS, TOKEN, encode_json_uri)
+from springapi.exceptions import (
+    EntryNotFound, CollectionNotFound, ValidationError, EntryAlreadyExists)
 from springapi.models.submission import Submission
 
 
@@ -219,6 +219,30 @@ def make_test_client(environ=None):
     environ.setdefault(AUTH, "firestore://eyJjbGllbnRfaWQiOiAiYWJjIn0=")
     environ.setdefault(USERS, ["a"])
     environ.setdefault(TOKEN, "sqlite")
+    environ.setdefault(CLIENT_ID, "123")
     app = create_app(environ)
     with app.test_client() as client:
         yield client
+
+
+def make_test_springapi_app(scheme, env_additional=None, remove=None):
+    credentials = {
+        "web": {
+            "client_id": "abc123"
+        }
+    }
+    auth = encode_json_uri(scheme, credentials)
+    env = {
+        AUTH: auth,
+        TOKEN: "sqlite",
+        USERS: ["a"]
+    }
+    if env_additional:
+        env.update(env_additional)
+    if remove:
+        for r in remove:
+            env.pop(r)
+    config = create_config(env)
+
+    app = create_app(config)
+    return app
