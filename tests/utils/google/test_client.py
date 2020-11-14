@@ -3,7 +3,7 @@ import requests
 import unittest
 
 from springapi.utils.google.client import (
-    create_auth_request_uri, get_oauth_token, get_authenticated_user,
+    create_auth_request_uri, get_oauth_token, get_authenticated_user_email,
     AuthProviderResponseError, ValidationError)
 from unittest import mock
 
@@ -64,17 +64,17 @@ class TestGoogleToken(unittest.TestCase):
 @mock.patch.object(requests, "get")
 class TestGetAuthenticatedUser(unittest.TestCase):
 
-    def test_get_authenticated_user_returns_user_info(self, mock_get):
-        expected = mock_get.return_value.content = b'{"email": "a@b"}'
-        response = get_authenticated_user("abc123")
-        self.assertEqual(response, json.loads(expected))
+    def test_get_authenticated_user_email_returns_user_info(self, mock_get):
+        expected = mock_get.return_value.content = b'{"email": "foo@bar.com"}'
+        response = get_authenticated_user_email("abc123")
+        self.assertEqual(response, json.loads(expected)["email"])
 
-    def test_get_authenticated_user_raises_AuthProviderResponseError(
+    def test_get_authenticated_user_email_raises_AuthProviderResponseError(
             self, mock_get):
         mock_get.return_value.content = b'{"bad_field": "error"}'
         user_url = "https://example.com"
         with self.assertRaises(AuthProviderResponseError) as context:
-            get_authenticated_user(
+            get_authenticated_user_email(
                 {"access_token": "abc123"}, user_url)
         self.assertEqual(
             str(context.exception),

@@ -48,7 +48,7 @@ def get_oauth_token(
     return token_data["access_token"]
 
 
-def get_authenticated_user(
+def get_authenticated_user_email(
         token, user_url="https://www.googleapis.com/oauth2/v2/userinfo"):
     full_url = f"{user_url}?access_token={token}"
     try:
@@ -58,4 +58,4 @@ def get_authenticated_user(
     except AssertionError:
         raise AuthProviderResponseError(
             f"Error retrieving user info from {user_url}")
-    return user_data
+    return user_data["email"]

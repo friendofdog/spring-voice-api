@@ -18,11 +18,11 @@ class TestAuthorization(unittest.TestCase):
 class TestToken(unittest.TestCase):
 
     @mock.patch('springapi.models.email.Email.get_authorized_emails')
-    @mock.patch('springapi.utils.authorization.get_authenticated_user')
+    @mock.patch('springapi.utils.authorization.get_authenticated_user_email')
     def test_exchange_oauth_token_returns_success(
             self, mock_user, mock_email, mock_resp):
         email = "foo@bar.com"
-        mock_user.return_value = {"email": email}
+        mock_user.return_value = email
         mock_email.return_value = [email]
         expected = mock_resp.return_value = "abc123"
         response = exchange_token(
@@ -31,10 +31,10 @@ class TestToken(unittest.TestCase):
         self.assertEqual(response, expected)
 
     @mock.patch('springapi.models.email.Email.get_authorized_emails')
-    @mock.patch('springapi.utils.authorization.get_authenticated_user')
+    @mock.patch('springapi.utils.authorization.get_authenticated_user_email')
     def test_exchange_oauth_token_raises_ValidationError_on_bad_email(
             self, mock_user, mock_email, mock_resp):
-        user = mock_user.return_value = {"email": "foo@bar.com"}
+        user_email = mock_user.return_value = "foo@bar.com"
         mock_email.return_value = ["bar@foo.com"]
         mock_resp.return_value = "abc123"
 
@@ -43,7 +43,7 @@ class TestToken(unittest.TestCase):
 
         self.assertEqual(
             str(context.exception),
-            f"User associated with {user['email']} is not authorized")
+            f"User associated with {user_email} is not authorized")
 
     def test_exchange_oauth_token_raises_error_on_bad_requst(self, mock_resp):
         mock_resp.side_effect = AuthProviderResponseError("no good")
