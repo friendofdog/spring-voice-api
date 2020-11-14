@@ -10,7 +10,7 @@ test:
 
 run:
 	@set -a && set +a && \
-	export DATABASE_URI=$(shell python3 -m bin.config --protocol=firestore $(DB)) && \
+	export DATABASE_URI=$(shell python3 -m bin.config --protocol=firebase $(DB)) && \
 	export AUTH=$(shell python3 -m bin.config --protocol=google $(AUTH)) && \
 	export USERS=$(shell python3 -m bin.config --protocol=firebase $(USERS)) && \
 	export TOKEN=$(TOKEN) && \

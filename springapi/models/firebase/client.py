@@ -1,7 +1,12 @@
+import json
+import tempfile
+
+import firebase_admin  # type: ignore
 from firebase_admin import firestore, auth  # type: ignore
 from google.api_core import exceptions as google_exceptions  # type: ignore
-from springapi.exceptions import \
-    CollectionNotFound, EntryAlreadyExists, EntryNotFound, ValidationError
+from springapi.config_helpers import decode_json_uri
+from springapi.exceptions import (
+    CollectionNotFound, EntryAlreadyExists, EntryNotFound, ValidationError)
 
 
 def get_collection(collection, field=None, value=None):
@@ -58,3 +63,22 @@ def get_email_addresses():
     user_list = auth.list_users()
     users = [u.email for u in user_list.users]
     return users
+
+
+def authenticate_firebase(uri):
+    _, config = decode_json_uri(uri)
+    if 'project_id' in config.keys():
+        with tempfile.NamedTemporaryFile(suffix=".json") as cred_file:
+            cred_file.write(json.dumps(config).encode("utf8"))
+            cred_file.seek(0)
+            app = firebase_admin.credentials.Certificate(cred_file.name)
+        firebase_admin.initialize_app(app, {
+            'projectId': app.project_id,
+            'storageBucket': f'{app.project_id}.appspot.com'
+        })
+    else:
+        raise MissingProjectId('project_id missing')
+
+
+class MissingProjectId(Exception):
+    pass

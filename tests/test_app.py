@@ -59,7 +59,7 @@ class TestSubmissionDatabaseCreation(unittest.TestCase):
             self, mocked):
         auth = mocked.return_value = 'abc'
 
-        scheme = 'firestore'
+        scheme = 'firebase'
         config = {'DATABASE_URI': f'{scheme}://ImFiY2RlIg=='}
 
         response = create_submission_database_instance(config)

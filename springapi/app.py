@@ -6,7 +6,7 @@ from flask import Flask
 from springapi.config_helpers import (
     USERS, TOKEN, decode_json_uri, create_config)
 from springapi.helpers import register
-from springapi.models.firebase.authenticate import authenticate_firebase
+from springapi.models.firebase.client import authenticate_firebase
 from springapi.models.sqlite import db
 from springapi.routes.authorization import (
     request_auth_code, request_exchange_token)
@@ -19,7 +19,7 @@ def create_submission_database_instance(config):
     database_uri = config["DATABASE_URI"]
     scheme, _ = decode_json_uri(database_uri)
 
-    if scheme == "firestore":
+    if scheme == "firebase":
         return authenticate_firebase(database_uri)
     else:
         raise ValueError(f"Unknown database protocol: {scheme}")
