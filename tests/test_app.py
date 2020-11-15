@@ -1,10 +1,8 @@
 import unittest
 
 from flask import Flask
-from springapi.app import (
-    create_submission_database_instance, create_user_database_instance,
-    create_token_database_instance)
-from springapi.config_helpers import AUTH, TOKEN
+from springapi.app import create_database_instance
+from springapi.config_helpers import AUTH, TOKEN, USER
 from tests.helpers import make_test_springapi_app
 from unittest import mock
 
@@ -26,8 +24,7 @@ class TestSpringapiAppCreation(unittest.TestCase):
         self.assertEqual(app_env['ENV'], 'testing')
         self.assertEqual(app_env['DEBUG'], False)
 
-    def test_springapi_raises_AssertionError_if_required_env_var_missing(
-            self):
+    def test_springapi_raises_AssertionError_if_required_env_var_missing(self):
         with self.assertRaises(AssertionError) as context:
             make_test_springapi_app("google", remove=[AUTH])
 
@@ -42,86 +39,48 @@ class TestSpringapiAppCreation(unittest.TestCase):
                          f"Unknown authorization protocol: {scheme}")
 
 
-class TestSubmissionDatabaseCreation(unittest.TestCase):
-
-    def test_create_submission_database_instance_raises_ValueError(self):
-        scheme = 'badscheme'
-        config = {'DATABASE_URI': f'{scheme}://ImFiY2RlIg=='}
-
-        with self.assertRaises(ValueError) as context:
-            create_submission_database_instance(config)
-
-        self.assertEqual(str(context.exception),
-                         f'Unknown database protocol: {scheme}')
-
-    @mock.patch('springapi.app.authenticate_firebase')
-    def test_create_submission_database_instance_auth_if_scheme_found(
-            self, mocked):
-        auth = mocked.return_value = 'abc'
-
-        scheme = 'firebase'
-        config = {'DATABASE_URI': f'{scheme}://ImFiY2RlIg=='}
-
-        response = create_submission_database_instance(config)
-        self.assertEqual(response, auth)
-        mocked.assert_called_with(f'{scheme}://ImFiY2RlIg==')
-
-
 @mock.patch('springapi.app.authenticate_firebase')
 @mock.patch('springapi.app.admin.get_app')
-class TestUserDatabaseCreation(unittest.TestCase):
+class TestDatabaseCreationFirebase(unittest.TestCase):
 
-    def test_create_user_database_instance_auth_if_scheme_found(
+    def test_create_database_instance_with_firebase_authenticates(
             self, mock_app, mock_auth):
-        mock_app.return_value = False
-        expected = mock_auth.return_value = 'abc'
-
+        mock_app.side_effect = ValueError
         scheme = 'firebase'
-        config = {'USERS': f'{scheme}://ImFiY2RlIg=='}
+        config = {USER: f'{scheme}://ImFiY2RlIg=='}
 
-        response = create_user_database_instance(config)
-        self.assertEqual(response, expected)
+        create_database_instance(config, USER)
         mock_auth.assert_called_with(f'{scheme}://ImFiY2RlIg==')
 
-    def test_create_user_database_instance_returns_str_if_instantiated(
+    def test_create_database_instance_with_firebase_returns_None(
             self, mock_app, mock_auth):
-        scheme = 'firebase'
         mock_app.return_value = True
-        expected = mock_auth.return_value = \
-            "Skipping user database instantiation. "\
-            f"{scheme} database instance already created"
+        scheme = 'firebase'
+        config = {USER: f'{scheme}://ImFiY2RlIg=='}
 
-        config = {'USERS': f'{scheme}://ImFiY2RlIg=='}
+        response = create_database_instance(config, USER)
+        self.assertEqual(mock_auth.called, False)
+        self.assertEqual(response, None)
 
-        response = create_user_database_instance(config)
-        self.assertEqual(response, expected)
-
-    def test_create_user_database_instance_returns_ValueError_on_bad_scheme(
+    def test_create_database_instance_raises_ValueError_on_bad_scheme(
             self, mock_app, mock_auth):
         scheme = 'badscheme'
-        config = {'USERS': f'{scheme}://ImFiY2RlIg=='}
+        config = {USER: f'{scheme}://ImFiY2RlIg=='}
 
         with self.assertRaises(ValueError) as context:
-            create_user_database_instance(config)
+            create_database_instance(config, USER)
 
-        self.assertEqual(str(context.exception),
-                         f'Unknown user database protocol: {scheme}')
-
-
-class TestTokenDatabaseCreation(unittest.TestCase):
-
-    @mock.patch('springapi.app.db.init_app')
-    def test_create_token_database_instance_calls_init_app(self, mock_db):
-        app = Flask(__name__)
-        config = {TOKEN: "sqlite"}
-        create_token_database_instance(config, app)
-        mock_db.assert_called_with(app)
-
-    def test_create_token_database_instance_ValueError_on_bad_scheme(self):
-        scheme = "bad_scheme"
-        config = {TOKEN: scheme}
-        with self.assertRaises(ValueError) as context:
-            create_token_database_instance(config, "app")
         self.assertEqual(
-            str(context.exception),
-            f"Unknown token database protocol: {scheme}")
+            str(context.exception), f'Unknown database protocol: {scheme}')
+
+
+@mock.patch('springapi.app.db.init_app')
+class TestDatabaseCreationSqlite(unittest.TestCase):
+
+    def test_create_database_instance_with_sqlite_calls_init_app(
+            self, mock_db):
+        app = Flask(__name__)
+        scheme = "sqlite"
+        config = {TOKEN: f'{scheme}://ImFiY2RlIg=='}
+        create_database_instance(config, TOKEN, app)
+        mock_db.assert_called_with(app)

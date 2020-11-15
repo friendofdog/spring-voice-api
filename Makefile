@@ -10,10 +10,10 @@ test:
 
 run:
 	@set -a && set +a && \
-	export DATABASE_URI=$(shell python3 -m bin.config --protocol=firebase $(DB)) && \
+	export SUBMISSION=$(shell python3 -m bin.config --protocol=firebase $(SUB)) && \
 	export AUTH=$(shell python3 -m bin.config --protocol=google $(AUTH)) && \
-	export USERS=$(shell python3 -m bin.config --protocol=firebase $(USERS)) && \
-	export TOKEN=$(TOKEN) && \
+	export USER=$(shell python3 -m bin.config --protocol=firebase $(USER)) && \
+	export TOKEN=$(shell python3 -m bin.config --protocol=sqlite $(TOKEN)) && \
 	python3 -m springapi.app
 
 lint:
