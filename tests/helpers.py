@@ -8,9 +8,10 @@ from springapi.config_helpers import (
 from springapi.exceptions import (
     EntryNotFound, CollectionNotFound, ValidationError, EntryAlreadyExists)
 from springapi.models.submission import Submission
+from springapi.models.token import Token
 
 
-class SubmissionResponseAssertions(unittest.TestCase):
+class ModelAssertions(unittest.TestCase):
 
     @contextlib.contextmanager
     def _assert_expected_exception_and_error(
@@ -22,6 +23,24 @@ class SubmissionResponseAssertions(unittest.TestCase):
             self.assertEqual(
                 context.exception.error_response_body(),
                 expected_err)
+
+
+class TokenResponseAssertions(ModelAssertions):
+
+    def assert_get_tokens_returns_all_valid_tokens(self, expected):
+        response = Token.get_tokens()
+        tokens = [r.to_json() for r in response]
+        expected_tokens = [expected[k] for k in expected]
+        self.assertListEqual(tokens, expected_tokens)
+
+    def assert_get_tokens_raises_CollectionNotFound(self):
+        with self._assert_expected_exception_and_error(
+                CollectionNotFound,
+                {'error': 'Collection tokens not found'}):
+            Token.get_tokens()
+
+
+class SubmissionResponseAssertions(ModelAssertions):
 
     def assert_missing_fields_get_default_values(self, data, expected):
         submission = Submission.from_json(data)
