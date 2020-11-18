@@ -1,6 +1,8 @@
 import springapi.models.firebase.client as client
+
 from springapi.exceptions import ValidationError
-from springapi.models.helpers import ApiObjectModel
+from springapi.models.helpers import (
+    ApiObjectModel, create_uid, set_defaults, validate_data)
 from typing import Dict, List, Any
 
 
@@ -10,7 +12,8 @@ COLLECTION = "tokens"
 class Token(ApiObjectModel):
 
     _fields = {
-        'token': {'isRequired': True, 'type': str, 'default': ''}
+        "id": {"isRequired": True, "type": str, "default": ""},
+        "token": {"isRequired": True, "type": str, "default": ""}
     }
 
     def __init__(self, field_data, **fields):
@@ -22,6 +25,7 @@ class Token(ApiObjectModel):
         response = client.get_collection(COLLECTION)
         tokens = []
         for result_id, result in response.items():
+            result["id"] = result_id
             try:
                 tokens.append(Token.from_json(result))
             except ValidationError:
@@ -30,7 +34,14 @@ class Token(ApiObjectModel):
 
     @classmethod
     def create_token(cls, data: Dict[str, Any]) -> "ApiObjectModel":
-        pass
+        data["id"] = create_uid()
+        validate_data(data, cls._fields)
+        data = set_defaults(data, cls._fields)
+
+        response = client.add_entry(COLLECTION, data.copy())
+        result = response[data["id"]]
+        result.setdefault("id", data["id"])
+        return Token.from_json(result)
 
     @classmethod
     def delete_token(cls, token: str) -> "ApiObjectModel":

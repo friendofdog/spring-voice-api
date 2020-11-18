@@ -28,9 +28,9 @@ class ModelAssertions(unittest.TestCase):
 class TokenResponseAssertions(ModelAssertions):
 
     def assert_get_tokens_returns_all_valid_tokens(self, expected):
+        expected_tokens = [expected[k] for k in expected]
         response = Token.get_tokens()
         tokens = [r.to_json() for r in response]
-        expected_tokens = [expected[k] for k in expected]
         self.assertListEqual(tokens, expected_tokens)
 
     def assert_get_tokens_raises_CollectionNotFound(self):
@@ -38,6 +38,22 @@ class TokenResponseAssertions(ModelAssertions):
                 CollectionNotFound,
                 {'error': 'Collection tokens not found'}):
             Token.get_tokens()
+
+    def assert_create_token_raises_validation_error(self, data):
+        exception = ValidationError
+        with self._assert_expected_exception_and_error(exception):
+            Token.create_token(data)
+
+    def assert_create_token_raises_already_exists(self, entry_id, data):
+        exception = EntryAlreadyExists
+        err = {'error': f'{entry_id} already exists in tokens'}
+        with self._assert_expected_exception_and_error(exception, err):
+            Token.create_token(data)
+
+    def assert_create_token_returns_success(self, data):
+        result = Token.create_token(data)
+        expected = Token.from_json(data)
+        self.assertEqual(expected, result)
 
 
 class SubmissionResponseAssertions(ModelAssertions):
@@ -145,9 +161,11 @@ class RouteResponseAssertions(unittest.TestCase):
             credentials={"Authorization": "Bearer FOOBAR"})
 
     def assert_get_raises_ok(
-            self, path, expected_response=None, credentials=None):
+            self, path, expected_response=None, credentials=None,
+            content_type="application/json"):
         return self.assert_expected_code_and_response(
-            'get', path, '200 OK', expected_response, credentials=credentials)
+            'get', path, '200 OK', expected_response, credentials=credentials,
+            content_type=content_type)
 
     def assert_get_returns_redirect(self, path):
         expected_response = None

@@ -4,7 +4,7 @@ from flask import request
 from springapi.exceptions import (
     pretty_errors, MissingAuthorization, InvalidAuthHeaderValue,
     InvalidAuthorization)
-from springapi.models.user import User
+from springapi.models.token import Token
 
 
 def make_route(*route_args, **route_kwargs):
@@ -52,8 +52,7 @@ def register(app, fn):
 
 
 def get_valid_admin_tokens():
-    users = [u.to_json() for u in User.get_users()]
-    tokens = [t["token"] for t in users if len(t["token"]) > 0]
+    tokens = [t.to_json()["token"] for t in Token.get_tokens()]
     return tokens
 
 
