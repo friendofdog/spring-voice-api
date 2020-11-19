@@ -8,7 +8,6 @@ AUTH = "AUTH"
 CLIENT_ID = "CLIENT_ID"
 SUBMISSION = "SUBMISSION"
 TOKEN = "TOKEN"
-USER = "USER"
 VERSION = "v1"
 
 
@@ -49,12 +48,10 @@ def create_config(environ):
     config["DEBUG"] = config["ENV"] == "development"
 
     assert AUTH in environ
-    assert USER in environ
     assert TOKEN in environ
 
     auth_credentials = _verify_auth_credentials(environ)
     config[AUTH] = auth_credentials
-    config[USER] = environ[USER]
     config[TOKEN] = environ[TOKEN]
 
     assert "web" in config[AUTH]

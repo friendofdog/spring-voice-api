@@ -2,7 +2,7 @@ import unittest
 
 from flask import Flask
 from springapi.app import create_database_instance
-from springapi.config_helpers import AUTH, TOKEN, USER
+from springapi.config_helpers import AUTH, TOKEN
 from tests.helpers import make_test_springapi_app
 from unittest import mock
 
@@ -47,28 +47,28 @@ class TestDatabaseCreationFirebase(unittest.TestCase):
             self, mock_app, mock_auth):
         mock_app.side_effect = ValueError
         scheme = 'firebase'
-        config = {USER: f'{scheme}://ImFiY2RlIg=='}
+        config = {TOKEN: f'{scheme}://ImFiY2RlIg=='}
 
-        create_database_instance(config, USER)
+        create_database_instance(config, TOKEN)
         mock_auth.assert_called_with(f'{scheme}://ImFiY2RlIg==')
 
     def test_create_database_instance_with_firebase_returns_None(
             self, mock_app, mock_auth):
         mock_app.return_value = True
         scheme = 'firebase'
-        config = {USER: f'{scheme}://ImFiY2RlIg=='}
+        config = {TOKEN: f'{scheme}://ImFiY2RlIg=='}
 
-        response = create_database_instance(config, USER)
+        response = create_database_instance(config, TOKEN)
         self.assertEqual(mock_auth.called, False)
         self.assertEqual(response, None)
 
     def test_create_database_instance_raises_ValueError_on_bad_scheme(
             self, mock_app, mock_auth):
         scheme = 'badscheme'
-        config = {USER: f'{scheme}://ImFiY2RlIg=='}
+        config = {TOKEN: f'{scheme}://ImFiY2RlIg=='}
 
         with self.assertRaises(ValueError) as context:
-            create_database_instance(config, USER)
+            create_database_instance(config, TOKEN)
 
         self.assertEqual(
             str(context.exception), f'Unknown database protocol: {scheme}')

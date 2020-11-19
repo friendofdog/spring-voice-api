@@ -12,7 +12,6 @@ run:
 	@set -a && set +a && \
 	export SUBMISSION=$(shell python3 -m bin.config --protocol=firebase $(SUB)) && \
 	export AUTH=$(shell python3 -m bin.config --protocol=google $(AUTH)) && \
-	export USER=$(shell python3 -m bin.config --protocol=firebase $(USER)) && \
 	export TOKEN=$(shell python3 -m bin.config --protocol=firebase $(TOKEN)) && \
 	python3 -m springapi.app
 

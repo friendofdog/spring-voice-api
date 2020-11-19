@@ -4,7 +4,7 @@ import firebase_admin as admin  # type: ignore
 from flask import Flask
 
 from springapi.config_helpers import (
-    USER, SUBMISSION, TOKEN, decode_json_uri, create_config)
+    SUBMISSION, TOKEN, decode_json_uri, create_config)
 from springapi.helpers import register
 from springapi.models.firebase.client import authenticate_firebase
 from springapi.models.sqlite import db
@@ -59,7 +59,6 @@ def main(environ):
     config = create_config(environ)
     app = create_app(config)
     create_database_instance(environ, SUBMISSION)
-    create_database_instance(environ, USER)
     app.run(host='0.0.0.0', port=5000)
 
 
