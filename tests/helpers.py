@@ -3,7 +3,7 @@ import json
 import unittest
 from mockfirestore import MockFirestore  # type: ignore
 from springapi.app import create_app, create_config
-from springapi.config_helpers import AUTH, CLIENT_ID, TOKEN, encode_json_uri
+from springapi.config_helpers import AUTH, SUBMISSION, TOKEN, encode_json_uri
 from springapi.exceptions import (
     EntryNotFound, CollectionNotFound, ValidationError, EntryAlreadyExists)
 from springapi.models.submission import Submission
@@ -249,38 +249,18 @@ def populate_mock_submissions(entries):
 
 
 @contextlib.contextmanager
-def make_test_client(environ=None):
+def make_test_client(environ=None, skip_defaults=False):
     auth_credentials = {
         "web": {
             "client_id": "abc123"
         }
     }
     environ = environ or {}
-    environ.setdefault("DATABASE_URI", encode_json_uri("firestore", {}))
-    environ.setdefault(AUTH, encode_json_uri("firebase", auth_credentials))
-    environ.setdefault(TOKEN, encode_json_uri("sqlite", {}))
-    environ.setdefault(CLIENT_ID, "123")
-    app = create_app(environ)
+    if not skip_defaults:
+        environ.setdefault(AUTH, encode_json_uri("google", auth_credentials))
+        environ.setdefault(SUBMISSION, encode_json_uri("firebase", {}))
+        environ.setdefault(TOKEN, encode_json_uri("sqlite", {}))
+    config = create_config(environ)
+    app = create_app(config)
     with app.test_client() as client:
         yield client
-
-
-def make_test_springapi_app(scheme, env_additional=None, remove=None):
-    auth_credentials = {
-        "web": {
-            "client_id": "abc123"
-        }
-    }
-    env = {
-        AUTH: encode_json_uri(scheme, auth_credentials),
-        TOKEN: encode_json_uri("sqlite", {}),
-    }
-    if env_additional:
-        env.update(env_additional)
-    if remove:
-        for r in remove:
-            env.pop(r)
-    config = create_config(env)
-
-    app = create_app(config)
-    return app

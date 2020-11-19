@@ -2,41 +2,42 @@ import unittest
 
 from flask import Flask
 from springapi.app import create_database_instance
-from springapi.config_helpers import AUTH, TOKEN
-from tests.helpers import make_test_springapi_app
+from springapi.config_helpers import AUTH, TOKEN, encode_json_uri
+from tests.helpers import make_test_client
 from unittest import mock
 
 
 class TestSpringapiAppCreation(unittest.TestCase):
 
     def test_springapi_debug_true_in_development(self):
-        env_vars = {"FLASK_ENV": "development"}
-        app = make_test_springapi_app("google", env_vars)
-        app_env = app.config
+        environ = {"FLASK_ENV": "development"}
+        with make_test_client(environ=environ) as app:
+            app_env = app.application.config
 
         self.assertEqual(app_env['ENV'], 'development')
         self.assertEqual(app_env['DEBUG'], True)
 
     def test_springapi_defaults_to_env_testing_debug_false(self):
-        app = make_test_springapi_app("google")
-        app_env = app.config
+        with make_test_client() as app:
+            app_env = app.application.config
 
         self.assertEqual(app_env['ENV'], 'testing')
         self.assertEqual(app_env['DEBUG'], False)
 
     def test_springapi_raises_AssertionError_if_required_env_var_missing(self):
         with self.assertRaises(AssertionError) as context:
-            make_test_springapi_app("google", remove=[AUTH])
-
-        self.assertIsInstance(context.exception, AssertionError)
+            with make_test_client(skip_defaults=True):
+                self.assertIsInstance(context.exception, AssertionError)
 
     def test_springapi_raises_ValueError_scheme_not_found(self):
         scheme = "badscheme"
-        with self.assertRaises(ValueError) as context:
-            make_test_springapi_app(scheme)
+        environ = encode_json_uri(scheme, {})
 
-        self.assertEqual(str(context.exception),
-                         f"Unknown authorization protocol: {scheme}")
+        with self.assertRaises(ValueError) as context:
+            with make_test_client({AUTH: environ}):
+                self.assertIsInstance(context.exception, ValueError)
+                self.assertEqual(str(context.exception),
+                                 f"Unknown authorization protocol: {scheme}")
 
 
 @mock.patch('springapi.app.authenticate_firebase')

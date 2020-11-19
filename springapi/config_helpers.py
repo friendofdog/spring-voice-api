@@ -48,6 +48,7 @@ def create_config(environ):
     config["DEBUG"] = config["ENV"] == "development"
 
     assert AUTH in environ
+    assert SUBMISSION in environ
     assert TOKEN in environ
 
     auth_credentials = _verify_auth_credentials(environ)
