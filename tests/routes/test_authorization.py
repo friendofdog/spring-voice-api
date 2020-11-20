@@ -1,7 +1,7 @@
 from flask import Response
 
 from springapi.exceptions import AuthorizationError
-from tests.helpers import RouteResponseAssertions
+from tests.routes.helpers import RouteResponseAssertions
 from unittest import mock
 
 

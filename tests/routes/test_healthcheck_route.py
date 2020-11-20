@@ -1,4 +1,4 @@
-from tests.helpers import make_test_client
+from tests.routes.helpers import make_test_client
 import unittest
 
 

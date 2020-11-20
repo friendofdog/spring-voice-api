@@ -1,7 +1,7 @@
 from springapi.exceptions import \
     CollectionNotFound, EntryNotFound, EntryAlreadyExists, ValidationError
 from springapi.models.submission import Submission
-from tests.helpers import RouteResponseAssertions
+from tests.routes.helpers import RouteResponseAssertions
 from unittest import mock
 
 
