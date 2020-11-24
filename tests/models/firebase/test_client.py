@@ -2,9 +2,10 @@ import json
 import unittest
 
 from mockfirestore import MockFirestore
-from springapi.config_helpers import encode_json_uri, InvalidJSONURI
+from springapi.helpers import encode_json_uri
 from springapi.exceptions import (
-    CollectionNotFound, EntryAlreadyExists, EntryNotFound, ValidationError)
+    CollectionNotFound, EntryAlreadyExists, EntryNotFound, InvalidJSONURI,
+    ValidationError)
 from springapi.models.firebase.client import (
     add_entry, authenticate_firebase, get_collection, get_entry,
     get_email_addresses, update_entry, MissingProjectId)

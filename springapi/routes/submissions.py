@@ -1,6 +1,6 @@
 import json
 from springapi.config_helpers import VERSION
-from springapi.helpers import make_route, requires_admin
+from springapi.routes.helpers import make_route, requires_admin
 from springapi.models.submission import Submission
 from flask import request
 

@@ -1,7 +1,9 @@
-import base64
-import binascii
-import json
-import urllib.parse
+import firebase_admin as admin  # type: ignore
+import os
+
+from springapi.helpers import decode_json_uri
+from springapi.models.firebase.client import authenticate_firebase
+from springapi.models.sqlite import db
 
 
 AUTH = "AUTH"
@@ -10,25 +12,6 @@ KEY = "KEY"
 SUBMISSION = "SUBMISSION"
 TOKEN = "TOKEN"
 VERSION = "v1"
-
-
-def encode_json_uri(scheme, config):
-    json_config = json.dumps(config).encode("utf8")
-    base64_config = base64.urlsafe_b64encode(json_config).decode("utf8")
-    return f"{scheme}://{base64_config}"
-
-
-def decode_json_uri(uri):
-    parsed_url = urllib.parse.urlparse(uri)
-    try:
-        base64_config = base64.b64decode(parsed_url.netloc)
-    except binascii.Error:
-        raise InvalidJSONURI("The config URI provided is not base64 encoded.")
-    try:
-        config = json.loads(base64_config)
-    except json.JSONDecodeError:
-        raise InvalidJSONURI("The config URI provided is not valid JSON.")
-    return parsed_url.scheme, config
 
 
 def _verify_auth_credentials(config):
@@ -41,6 +24,27 @@ def _verify_auth_credentials(config):
         raise ValueError(f"Unknown authorization protocol: {scheme}")
 
     return credentials
+
+
+def create_database_instance(config, model, app=None):
+    database_uri = config[model]
+    scheme, _ = decode_json_uri(database_uri)
+
+    if scheme == "firebase":
+        try:
+            admin.get_app()
+        except ValueError:
+            authenticate_firebase(database_uri)
+    elif scheme == "sqlite":
+        app.config.from_mapping(
+            TOKEN_DB=os.path.join(app.instance_path, f"token.{scheme}"))
+        try:
+            os.makedirs(app.instance_path)
+        except OSError:
+            pass
+        db.init_app(app)
+    else:
+        raise ValueError(f"Unknown database protocol: {scheme}")
 
 
 def create_config(environ):
@@ -63,7 +67,3 @@ def create_config(environ):
 
     config[CLIENT_ID] = config[AUTH]["web"]["client_id"]
     return config
-
-
-class InvalidJSONURI(Exception):
-    pass

@@ -1,8 +1,8 @@
 import unittest
 
 from flask import Flask
-from springapi.app import create_database_instance
-from springapi.config_helpers import AUTH, TOKEN, encode_json_uri
+from springapi.config_helpers import AUTH, TOKEN, create_database_instance
+from springapi.helpers import encode_json_uri
 from tests.helpers import make_test_client
 from unittest import mock
 
@@ -40,8 +40,8 @@ class TestSpringapiAppCreation(unittest.TestCase):
                                  f"Unknown authorization protocol: {scheme}")
 
 
-@mock.patch('springapi.app.authenticate_firebase')
-@mock.patch('springapi.app.admin.get_app')
+@mock.patch('springapi.config_helpers.authenticate_firebase')
+@mock.patch('springapi.config_helpers.admin.get_app')
 class TestDatabaseCreationFirebase(unittest.TestCase):
 
     def test_create_database_instance_with_firebase_authenticates(
@@ -75,7 +75,7 @@ class TestDatabaseCreationFirebase(unittest.TestCase):
             str(context.exception), f'Unknown database protocol: {scheme}')
 
 
-@mock.patch('springapi.app.db.init_app')
+@mock.patch('springapi.config_helpers.db.init_app')
 class TestDatabaseCreationSqlite(unittest.TestCase):
 
     def test_create_database_instance_with_sqlite_calls_init_app(

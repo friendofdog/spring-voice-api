@@ -2,7 +2,7 @@ from flask import redirect, request, Response
 
 from springapi.config_helpers import AUTH, CLIENT_ID, KEY, VERSION
 from springapi.exceptions import AuthorizationError
-from springapi.helpers import make_route
+from springapi.routes.helpers import make_route
 from springapi.utils.authorization import get_auth_code_uri, create_api_token
 
 

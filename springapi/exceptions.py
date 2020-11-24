@@ -84,6 +84,10 @@ class AuthProviderResponseError(Exception):
         return self.error_response_body(), 400
 
 
+class InvalidJSONURI(Exception):
+    pass
+
+
 def pretty_errors(fn):
     """
     Applies exceptions to the passed-in function, ensuring that if it fails

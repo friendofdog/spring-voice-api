@@ -1,9 +1,10 @@
 import springapi.models.firebase.client as client
 
+from typing import Dict, List, Any
+
 from springapi.exceptions import ValidationError
 from springapi.models.helpers import (
     ApiObjectModel, create_uid, set_defaults, validate_data)
-from typing import Dict, List, Any
 
 
 COLLECTION = "tokens"

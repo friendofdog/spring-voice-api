@@ -4,7 +4,8 @@ from mockfirestore import MockFirestore  # type: ignore
 
 from springapi.app import create_app, create_config
 from springapi.config_helpers import (
-    AUTH, KEY, SUBMISSION, TOKEN, encode_json_uri)
+    AUTH, KEY, SUBMISSION, TOKEN)
+from springapi.helpers import encode_json_uri
 
 
 def populate_mock_submissions(entries):

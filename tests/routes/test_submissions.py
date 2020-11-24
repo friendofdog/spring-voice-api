@@ -8,7 +8,7 @@ from unittest import mock
 MOCK_TOKENS = ["abc", "def"]
 
 
-@mock.patch('springapi.helpers.get_valid_admin_tokens')
+@mock.patch('springapi.routes.helpers.get_valid_admin_tokens')
 @mock.patch('springapi.models.firebase.client.get_collection')
 class TestSubmissionsRouteGetAll(RouteResponseAssertions):
 
@@ -116,7 +116,7 @@ class TestSubmissionsRouteGetAll(RouteResponseAssertions):
         mocked.assert_called_with('submissions')
 
 
-@mock.patch('springapi.helpers.get_valid_admin_tokens')
+@mock.patch('springapi.routes.helpers.get_valid_admin_tokens')
 @mock.patch('springapi.models.firebase.client.get_entry')
 class TestSubmissionsRouteGetSingle(RouteResponseAssertions):
 
@@ -213,7 +213,7 @@ class TestSubmissionsRouteCreate(RouteResponseAssertions):
             '/api/v1/submissions', err.error_response_body())
 
 
-@mock.patch('springapi.helpers.get_valid_admin_tokens')
+@mock.patch('springapi.routes.helpers.get_valid_admin_tokens')
 @mock.patch('springapi.models.firebase.client.update_entry')
 class TestSubmissionsRouteUpdate(RouteResponseAssertions):
 

@@ -1,39 +1,15 @@
 import os
-import firebase_admin as admin  # type: ignore
 
 from flask import Flask
 
 from springapi.config_helpers import (
-    SUBMISSION, TOKEN, decode_json_uri, create_config)
-from springapi.helpers import register
-from springapi.models.firebase.client import authenticate_firebase
-from springapi.models.sqlite import db
+    SUBMISSION, TOKEN, create_config, create_database_instance)
 from springapi.routes.authorization import (
     request_auth_code, request_exchange_token)
 from springapi.routes.healthcheck import healthcheck
+from springapi.routes.helpers import register
 from springapi.routes.submissions import (
     get_all, get_single, create_single, update_single)
-
-
-def create_database_instance(config, model, app=None):
-    database_uri = config[model]
-    scheme, _ = decode_json_uri(database_uri)
-
-    if scheme == "firebase":
-        try:
-            admin.get_app()
-        except ValueError:
-            authenticate_firebase(database_uri)
-    elif scheme == "sqlite":
-        app.config.from_mapping(
-            TOKEN_DB=os.path.join(app.instance_path, f"token.{scheme}"))
-        try:
-            os.makedirs(app.instance_path)
-        except OSError:
-            pass
-        db.init_app(app)
-    else:
-        raise ValueError(f"Unknown database protocol: {scheme}")
 
 
 def create_app(config):

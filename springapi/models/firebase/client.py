@@ -4,7 +4,7 @@ import tempfile
 import firebase_admin  # type: ignore
 from firebase_admin import firestore, auth  # type: ignore
 from google.api_core import exceptions as google_exceptions  # type: ignore
-from springapi.config_helpers import decode_json_uri
+from springapi.helpers import decode_json_uri
 from springapi.exceptions import (
     CollectionNotFound, EntryAlreadyExists, EntryNotFound, ValidationError)
 
