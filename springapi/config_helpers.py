@@ -6,6 +6,7 @@ import urllib.parse
 
 AUTH = "AUTH"
 CLIENT_ID = "CLIENT_ID"
+KEY = "KEY"
 SUBMISSION = "SUBMISSION"
 TOKEN = "TOKEN"
 VERSION = "v1"
@@ -48,11 +49,13 @@ def create_config(environ):
     config["DEBUG"] = config["ENV"] == "development"
 
     assert AUTH in environ
+    assert KEY in environ
     assert SUBMISSION in environ
     assert TOKEN in environ
 
     auth_credentials = _verify_auth_credentials(environ)
     config[AUTH] = auth_credentials
+    config[KEY] = environ[KEY]
     config[TOKEN] = environ[TOKEN]
 
     assert "web" in config[AUTH]

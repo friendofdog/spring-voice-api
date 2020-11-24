@@ -3,7 +3,8 @@ import uuid
 from mockfirestore import MockFirestore  # type: ignore
 
 from springapi.app import create_app, create_config
-from springapi.config_helpers import AUTH, SUBMISSION, TOKEN, encode_json_uri
+from springapi.config_helpers import (
+    AUTH, KEY, SUBMISSION, TOKEN, encode_json_uri)
 
 
 def populate_mock_submissions(entries):
@@ -20,6 +21,7 @@ def make_test_client(environ=None, skip_defaults=False):
     environ = environ or {}
     if not skip_defaults:
         environ.setdefault(AUTH, encode_json_uri("google", auth_credentials))
+        environ.setdefault(KEY, "secretkey")
         environ.setdefault(SUBMISSION, encode_json_uri("firebase", {}))
         environ.setdefault(TOKEN, encode_json_uri("sqlite", {}))
     config = create_config(environ)

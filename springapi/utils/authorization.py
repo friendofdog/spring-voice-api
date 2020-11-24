@@ -33,19 +33,18 @@ def exchange_oauth_token(auth_code, credentials, redirect_host):
     return email
 
 
-def generate_api_token(email):
+def generate_api_token(email, key):
     payload = {
         "email": email,
         "iss": "springapi"
     }
-    key = "secret"  # bad, replace
     token = jwt.encode(payload, key, algorithm="HS256")
     return token
 
 
-def create_api_token(auth_code, credentials, redirect_host):
+def create_api_token(auth_code, credentials, key, redirect_host):
     email = exchange_oauth_token(auth_code, credentials, redirect_host)
-    api_token = generate_api_token(email)
+    api_token = generate_api_token(email, key)
     token_obj = {"token": api_token.decode("utf-8")}
     Token.create_token(token_obj)
     return api_token

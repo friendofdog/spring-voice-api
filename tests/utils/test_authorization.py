@@ -62,7 +62,7 @@ class TestGenerateApiToken(unittest.TestCase):
 
     def test_generate_api_token_returns_token(self, mock_jwt):
         expected = mock_jwt.return_value = b"qwerty"
-        token = generate_api_token("foo@bar.com")
+        token = generate_api_token("foo@bar.com", "keysecret")
 
         self.assertEqual(expected, token)
 
@@ -74,7 +74,8 @@ class TestCreateApiToken(unittest.TestCase):
 
     def __init__(self, _):
         super().__init__(_)
-        self.args = "auth-code-str", {"client_id": "123"}, "http://example.com"
+        self.args = "auth-code-str", {"client_id": "123"},\
+                    "secretkey", "http://example.com"
 
     def test_create_api_token_returns_api_token(
             self, mock_exch, mock_gen, mock_create):
