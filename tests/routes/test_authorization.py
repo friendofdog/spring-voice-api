@@ -1,16 +1,24 @@
 from flask import Response
+from unittest import mock
 
 from springapi.exceptions import AuthorizationError
 from tests.routes.helpers import RouteResponseAssertions
-from unittest import mock
 
 
+@mock.patch('springapi.routes.helpers.get_valid_admin_tokens')
 class TestAuthRoute(RouteResponseAssertions):
 
     @mock.patch('springapi.routes.authorization.get_auth_code_uri')
-    def test_auth_route_returns_redirect(self, mock_auth):
+    def test_auth_route_returns_200_on_valid_token_in_header(
+            self, mock_auth, mock_tokens):
+        mock_tokens.return_value = ["abc", "def"]
         mock_auth.return_value = "http://example.com"
-        self.assert_get_returns_redirect("/api/v1/auth")
+        self.assert_get_returns_redirect(
+            "/api/v1/auth", {"Authorization": "Bearer abc"})
+
+    def test_auth_route_redirects_on_bad_or_missing_token(self, mock_tokens):
+        mock_tokens.return_value = ["abc", "def"]
+        self.assert_checks_authentication("get", "/api/v1/auth")
 
 
 @mock.patch('springapi.routes.authorization.create_api_token')

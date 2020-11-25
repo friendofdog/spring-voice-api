@@ -24,6 +24,21 @@ class RouteResponseAssertions(unittest.TestCase):
             self.assertEqual(
                 content_type, r.headers["Content-type"])
 
+    def assert_checks_authentication(self, method, path):
+        self.assert_expected_code_and_response(
+            method, path, '302 FOUND', None,
+            content_type="text/html; charset=utf-8")
+
+        self.assert_expected_code_and_response(
+            method, path, '302 FOUND', None,
+            credentials={"Authorization": "FOOBAR"},
+            content_type="text/html; charset=utf-8")
+
+        self.assert_expected_code_and_response(
+            method, path, '302 FOUND', None,
+            credentials={"Authorization": "Bearer FOOBAR"},
+            content_type="text/html; charset=utf-8")
+
     def assert_requires_admin_authentication(self, method, path):
         expected_response = {
             "error": "unauthorized",
@@ -55,11 +70,10 @@ class RouteResponseAssertions(unittest.TestCase):
             'get', path, '200 OK', expected_response, credentials=credentials,
             content_type=content_type)
 
-    def assert_get_returns_redirect(self, path):
-        expected_response = None
+    def assert_get_returns_redirect(self, path, credentials):
+        expected_response = {"status": "Valid token found in request header"}
         return self.assert_expected_code_and_response(
-            'get', path, '302 FOUND', expected_response,
-            content_type="text/html; charset=utf-8")
+            'get', path, '200 OK', expected_response, credentials=credentials)
 
     def assert_get_raises_not_found(
             self, path, expected_response=None, credentials=None):

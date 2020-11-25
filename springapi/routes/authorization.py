@@ -2,11 +2,12 @@ from flask import redirect, request, Response
 
 from springapi.config_helpers import AUTH, CLIENT_ID, KEY, VERSION
 from springapi.exceptions import AuthorizationError
-from springapi.routes.helpers import make_route
+from springapi.routes.helpers import make_route, checks_authentication
 from springapi.utils.authorization import get_auth_code_uri, create_api_token
 
 
 @make_route(f"/api/{VERSION}/auth", methods=['GET'])
+@checks_authentication
 def request_auth_code(config):
     client_id = config[CLIENT_ID]
     redirect_host = request.host_url
