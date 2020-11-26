@@ -5,10 +5,10 @@ from mockfirestore import MockFirestore
 from springapi.helpers import encode_json_uri
 from springapi.exceptions import (
     CollectionNotFound, EntryAlreadyExists, EntryNotFound, InvalidJSONURI,
-    ValidationError)
+    MissingProjectId, ValidationError)
 from springapi.models.firebase.client import (
     add_entry, authenticate_firebase, get_collection, get_entry,
-    get_email_addresses, update_entry, MissingProjectId)
+    get_email_addresses, update_entry)
 from tests.helpers import populate_mock_submissions
 from unittest import mock
 

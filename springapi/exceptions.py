@@ -84,8 +84,28 @@ class AuthProviderResponseError(Exception):
         return self.error_response_body(), 400
 
 
+class MissingProjectId(Exception):
+
+    def __init__(self, message):
+        self.message = message
+
+    def error_response_body(self):
+        return {'error': self.message}
+
+    def error_response_body_and_code(self):
+        return self.error_response_body(), 400
+
+
 class InvalidJSONURI(Exception):
-    pass
+
+    def __init__(self, message):
+        self.message = message
+
+    def error_response_body(self):
+        return {'error': self.message}
+
+    def error_response_body_and_code(self):
+        return self.error_response_body(), 400
 
 
 def pretty_errors(fn):

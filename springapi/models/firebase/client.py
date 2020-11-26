@@ -6,7 +6,8 @@ from firebase_admin import firestore, auth  # type: ignore
 from google.api_core import exceptions as google_exceptions  # type: ignore
 from springapi.helpers import decode_json_uri
 from springapi.exceptions import (
-    CollectionNotFound, EntryAlreadyExists, EntryNotFound, ValidationError)
+    CollectionNotFound, EntryAlreadyExists, EntryNotFound,
+    MissingProjectId, ValidationError)
 
 
 def get_collection(collection, field=None, value=None):
@@ -78,7 +79,3 @@ def authenticate_firebase(uri):
         })
     else:
         raise MissingProjectId('project_id missing')
-
-
-class MissingProjectId(Exception):
-    pass
