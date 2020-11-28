@@ -1,29 +1,30 @@
 import json
-from springapi.helpers import route, VERSION
+from springapi.config_helpers import VERSION
+from springapi.routes.helpers import make_route, requires_admin
 from springapi.models.submission import Submission
 from flask import request
 
 
-@route(f"/api/{VERSION}/submissions", methods=['GET'])
-def get_all():
+@make_route(f"/api/{VERSION}/submissions", methods=['GET'])
+@requires_admin
+def get_all(config):
     submissions = [s.to_json() for s in Submission.get_submissions()]
     return {"submissions": submissions}, 200
 
 
-@route(f"/api/{VERSION}/submissions/<entry_id>", methods=['GET'])
-def get_single(entry_id):
+@make_route(f"/api/{VERSION}/submissions/<entry_id>", methods=['GET'])
+@requires_admin
+def get_single(config, entry_id):
     try:
         submission = Submission.get_submission(entry_id)
     except ValueError as err:
-        return {
-            "error": f"{entry_id} contains data which has failed validation - "
-                     f"{err}"
-        }, 400
+        return {"error": f"{entry_id} contains data which has failed "
+                         f"validation - {err}"}, 400
     return submission.to_json(), 200
 
 
-@route(f"/api/{VERSION}/submissions", methods=['POST'])
-def create_single():
+@make_route(f"/api/{VERSION}/submissions", methods=['POST'])
+def create_single(config):
     try:
         request_data = json.loads(request.data)
     except ValueError:
@@ -31,8 +32,9 @@ def create_single():
     return Submission.create_submission(request_data).to_json(), 201
 
 
-@route(f"/api/{VERSION}/submissions/<entry_id>", methods=['PUT'])
-def update_single(entry_id):
+@make_route(f"/api/{VERSION}/submissions/<entry_id>", methods=['PUT'])
+@requires_admin
+def update_single(config, entry_id):
     try:
         request_data = json.loads(request.data)
     except ValueError:

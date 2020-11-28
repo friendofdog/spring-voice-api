@@ -1,16 +1,25 @@
-from springapi.models.exceptions import pretty_errors
+import base64
+import binascii
+import json
+import urllib.parse
+
+from springapi.exceptions import InvalidJSONURI
 
 
-VERSION = "v1"
+def encode_json_uri(scheme, config):
+    json_config = json.dumps(config).encode("utf8")
+    base64_config = base64.urlsafe_b64encode(json_config).decode("utf8")
+    return f"{scheme}://{base64_config}"
 
 
-def route(*route_args, **route_kwargs):
-    def wrapper(fn):
-        fn._route_args = route_args
-        fn._route_kwargs = route_kwargs
-        return pretty_errors(fn)
-    return wrapper
-
-
-def register(app, route):
-    app.route(*route._route_args, **route._route_kwargs)(route)
+def decode_json_uri(uri):
+    parsed_url = urllib.parse.urlparse(uri)
+    try:
+        base64_config = base64.b64decode(parsed_url.netloc)
+    except binascii.Error:
+        raise InvalidJSONURI("The config URI provided is not base64 encoded.")
+    try:
+        config = json.loads(base64_config)
+    except json.JSONDecodeError:
+        raise InvalidJSONURI("The config URI provided is not valid JSON.")
+    return parsed_url.scheme, config

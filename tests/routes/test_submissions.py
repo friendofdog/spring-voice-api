@@ -1,13 +1,23 @@
-from springapi.models import exceptions
+from springapi.exceptions import \
+    CollectionNotFound, EntryNotFound, EntryAlreadyExists, ValidationError
 from springapi.models.submission import Submission
-from tests.helpers import RouteResponseAssertions
+from tests.routes.helpers import RouteResponseAssertions
 from unittest import mock
 
 
+MOCK_TOKENS = ["abc", "def"]
+
+
+@mock.patch('springapi.routes.helpers.get_valid_admin_tokens')
 @mock.patch('springapi.models.firebase.client.get_collection')
 class TestSubmissionsRouteGetAll(RouteResponseAssertions):
 
-    def test_get_all_returns_entries_if_found(self, mocked):
+    def test_get_all_requires_admin_authentication(self, mocked, auth):
+        self.assert_requires_admin_authentication(
+            "get", "/api/v1/submissions")
+
+    def test_get_all_returns_entries_if_found(self, mocked, auth):
+        auth.return_value = MOCK_TOKENS
         mocked.return_value = {
             "abc": {
                 "name": "Some Guy",
@@ -35,16 +45,21 @@ class TestSubmissionsRouteGetAll(RouteResponseAssertions):
             }).to_json()
         ]
         self.assert_get_raises_ok(
-            '/api/v1/submissions', {'submissions': expected})
+            '/api/v1/submissions', {'submissions': expected},
+            credentials={"Authorization": "Bearer abc"})
         mocked.assert_called_with('submissions')
 
-    def test_get_all_returns_empty_list(self, mocked):
+    def test_get_all_returns_empty_list(self, mocked, auth):
+        auth.return_value = MOCK_TOKENS
         mocked.return_value = {}
         self.assert_get_raises_ok(
-            '/api/v1/submissions', {'submissions': []})
+            '/api/v1/submissions', {'submissions': []},
+            credentials={"Authorization": "Bearer abc"})
         mocked.assert_called_with('submissions')
 
-    def test_get_all_omits_entries_with_required_field_missing(self, mocked):
+    def test_get_all_omits_entries_with_required_field_missing(
+            self, mocked, auth):
+        auth.return_value = MOCK_TOKENS
         mocked.return_value = {
             "abc": {
                 "name": "Some Guy",
@@ -63,15 +78,19 @@ class TestSubmissionsRouteGetAll(RouteResponseAssertions):
             "location": "There"
         }).to_json()
         self.assert_get_raises_ok(
-            '/api/v1/submissions', {'submissions': [expected]})
+            '/api/v1/submissions', {'submissions': [expected]},
+            credentials={"Authorization": "Bearer abc"})
         mocked.assert_called_with('submissions')
 
-    def test_get_all_returns_not_found(self, mocked):
-        err = mocked.side_effect = exceptions.CollectionNotFound('submissions')
+    def test_get_all_returns_not_found(self, mocked, auth):
+        auth.return_value = MOCK_TOKENS
+        err = mocked.side_effect = CollectionNotFound('submissions')
         self.assert_get_raises_not_found(
-            '/api/v1/submissions', err.error_response_body())
+            '/api/v1/submissions', err.error_response_body(),
+            credentials={"Authorization": "Bearer abc"})
 
-    def test_get_all_omits_entries_with_invalid_field(self, mocked):
+    def test_get_all_omits_entries_with_invalid_field(self, mocked, auth):
+        auth.return_value = MOCK_TOKENS
         mocked.return_value = {
             "abc": {
                 "name": "Some Guy",
@@ -92,14 +111,22 @@ class TestSubmissionsRouteGetAll(RouteResponseAssertions):
             "location": "There"
         }).to_json()
         self.assert_get_raises_ok(
-            '/api/v1/submissions', {'submissions': [expected]})
+            '/api/v1/submissions', {'submissions': [expected]},
+            credentials={"Authorization": "Bearer abc"})
         mocked.assert_called_with('submissions')
 
 
+@mock.patch('springapi.routes.helpers.get_valid_admin_tokens')
 @mock.patch('springapi.models.firebase.client.get_entry')
 class TestSubmissionsRouteGetSingle(RouteResponseAssertions):
 
-    def test_get_single_returns_entry_if_found(self, mocked):
+    def test_get_single_requires_admin_authentication(self, mocked, auth):
+        auth.return_value = MOCK_TOKENS
+        self.assert_requires_admin_authentication(
+            "get", "/api/v1/submissions/abc")
+
+    def test_get_single_returns_entry_if_found(self, mocked, auth):
+        auth.return_value = MOCK_TOKENS
         entry_id = 'abc'
         mocked.return_value = {
             'name': 'Guy',
@@ -113,17 +140,21 @@ class TestSubmissionsRouteGetSingle(RouteResponseAssertions):
             'location': 'There'
         })
         self.assert_get_raises_ok(
-            f'/api/v1/submissions/{entry_id}', expected.to_json())
+            f'/api/v1/submissions/{entry_id}', expected.to_json(),
+            credentials={"Authorization": "Bearer abc"})
         mocked.assert_called_with("submissions", entry_id)
 
-    def test_get_single_returns_not_found(self, mocked):
+    def test_get_single_returns_not_found(self, mocked, auth):
+        auth.return_value = MOCK_TOKENS
         entry_id = 'abc'
-        err = mocked.side_effect = exceptions.EntryNotFound(
+        err = mocked.side_effect = EntryNotFound(
             entry_id, 'submissions')
         self.assert_get_raises_not_found(
-            f'/api/v1/submissions/{entry_id}', err.error_response_body())
+            f'/api/v1/submissions/{entry_id}', err.error_response_body(),
+            credentials={"Authorization": "Bearer abc"})
 
-    def test_get_single_returns_error_if_disallowed_field(self, mocked):
+    def test_get_single_returns_error_if_disallowed_field(self, mocked, auth):
+        auth.return_value = MOCK_TOKENS
         entry_id = 'abc'
         mocked.return_value = {
             'name': 'Guy',
@@ -134,9 +165,12 @@ class TestSubmissionsRouteGetSingle(RouteResponseAssertions):
         expected = {'error': 'abc contains data which has failed validation - '
                              'Not allowed: bad_field'}
         self.assert_get_raises_invalid_body(
-            f'/api/v1/submissions/{entry_id}', expected)
+            f'/api/v1/submissions/{entry_id}', expected,
+            credentials={"Authorization": "Bearer abc"})
 
-    def test_get_single_returns_error_if_missing_required_field(self, mocked):
+    def test_get_single_returns_error_if_missing_required_field(
+            self, mocked, auth):
+        auth.return_value = MOCK_TOKENS
         entry_id = 'abc'
         mocked.return_value = {
             'name': 'Guy',
@@ -145,10 +179,11 @@ class TestSubmissionsRouteGetSingle(RouteResponseAssertions):
         expected = {'error': 'abc contains data which has failed validation - '
                              'Missing: location'}
         self.assert_get_raises_invalid_body(
-            f'/api/v1/submissions/{entry_id}', expected)
+            f'/api/v1/submissions/{entry_id}', expected,
+            credentials={"Authorization": "Bearer abc"})
 
 
-@mock.patch('springapi.models.submission._create_uid')
+@mock.patch('springapi.models.submission.create_uid')
 @mock.patch('springapi.models.firebase.client.add_entry')
 class TestSubmissionsRouteCreate(RouteResponseAssertions):
 
@@ -159,12 +194,12 @@ class TestSubmissionsRouteCreate(RouteResponseAssertions):
 
         data["id"] = entry_id  # _create_uid()
         expected = Submission.from_json(data).to_json()
-        self.assert_post_raises_ok('/api/v1/submissions', data, expected)
+        self.assert_post_raises_created('/api/v1/submissions', data, expected)
         mock_add.assert_called_with("submissions", expected)
 
     def test_create_single_raises_EntryAlreadyExists(self, mock_add, mock_id):
         mock_id.return_value = 'abc'
-        err = mock_add.side_effect = exceptions.EntryAlreadyExists(
+        err = mock_add.side_effect = EntryAlreadyExists(
             'abc', 'submissions')
         body = {"name": "a", "message": "b", "location": "c"}
         self.assert_post_raises_already_exists(
@@ -173,35 +208,40 @@ class TestSubmissionsRouteCreate(RouteResponseAssertions):
     def test_create_single_rejects_invalid_json(self, mock_add, mock_id):
         mock_id.return_value = 'abc'
         mock_add.return_value = ''
-        err = exceptions.ValidationError('Invalid JSON')
+        err = ValidationError('Invalid JSON')
         self.assert_post_raises_invalid_body(
             '/api/v1/submissions', err.error_response_body())
 
 
+@mock.patch('springapi.routes.helpers.get_valid_admin_tokens')
 @mock.patch('springapi.models.firebase.client.update_entry')
 class TestSubmissionsRouteUpdate(RouteResponseAssertions):
 
-    def test_update_single_returns_success(self, mocked):
+    def test_update_single_returns_success(self, mocked, auth):
+        auth.return_value = MOCK_TOKENS
         entry_id = 'abc'
         data = {"id": entry_id, "name": "b", "location": "b", "message": "b"}
         expected = mocked.return_value = {'success': f'{entry_id} updated'}
         self.assert_put_raises_ok(
-            f'/api/v1/submissions/{entry_id}', data, expected)
+            f'/api/v1/submissions/{entry_id}', data, expected,
+            credentials={"Authorization": "Bearer abc"})
         mocked.assert_called_with(
             "submissions", Submission.from_json(data).to_json(), entry_id)
 
-    def test_update_single_returns_not_found(self, mocked):
+    def test_update_single_returns_not_found(self, mocked, auth):
+        auth.return_value = MOCK_TOKENS
         entry_id = 'abc'
         body = {"id": entry_id, "name": "", "location": "", "message": ""}
-        err = mocked.side_effect = exceptions.EntryNotFound(
+        err = mocked.side_effect = EntryNotFound(
             entry_id, 'submissions')
         self.assert_put_raises_not_found(
-            f'api/v1/submissions/{entry_id}', body, err.error_response_body())
+            f'api/v1/submissions/{entry_id}', body, err.error_response_body(),
+            credentials={"Authorization": "Bearer abc"})
 
-    def test_update_single_rejects_invalid_json(self, mocked):
+    def test_update_single_rejects_invalid_json(self, mocked, auth):
+        auth.return_value = MOCK_TOKENS
         entry_id = 'abc'
-        err = exceptions.ValidationError('Invalid JSON')
+        err = ValidationError('Invalid JSON')
         self.assert_put_raises_invalid_body(
-            f'/api/v1/submissions/{entry_id}',
-            err.error_response_body()
-        )
+            f'/api/v1/submissions/{entry_id}', err.error_response_body(),
+            credentials={"Authorization": "Bearer abc"})

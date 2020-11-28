@@ -1,6 +1,7 @@
-from springapi.helpers import route, VERSION
+from springapi.config_helpers import VERSION
+from springapi.routes.helpers import make_route
 
 
-@route(f"/api/{VERSION}/healthcheck", methods=['GET'])
-def healthcheck():
+@make_route(f"/api/{VERSION}/healthcheck", methods=['GET'])
+def healthcheck(config):
     return {"success": True}, 200

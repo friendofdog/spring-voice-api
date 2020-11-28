@@ -1,6 +1,7 @@
 import argparse
 import json
-from springapi.config_helpers import encode_json_uri
+
+from springapi.helpers import encode_json_uri
 
 def create_config_filepath():
     parser = argparse.ArgumentParser()

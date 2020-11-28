@@ -1,144 +1,14 @@
 import contextlib
-import json
-import unittest
+import uuid
 from mockfirestore import MockFirestore  # type: ignore
-from springapi.app import create_app
-from springapi.config_helpers import encode_json_uri
-from springapi.models import exceptions
-from springapi.models.submission import Submission
 
-
-class SubmissionResponseAssertions(unittest.TestCase):
-
-    @contextlib.contextmanager
-    def _assert_expected_exception_and_error(
-            self, expected_exception, expected_err=None):
-        with self.assertRaises(expected_exception) as context:
-            yield
-
-        if expected_err is not None:
-            self.assertEqual(
-                context.exception.error_response_body(),
-                expected_err)
-
-    def assert_missing_fields_get_default_values(self, data, expected):
-        submission = Submission.from_json(data)
-        self.assertEqual(submission.to_json(), expected)
-
-    def assert_get_submissions_raises_not_found(self):
-        with self._assert_expected_exception_and_error(
-                exceptions.CollectionNotFound,
-                {'error': 'Collection submissions not found'}):
-            Submission.get_submissions()
-
-    def assert_get_submissions_returns_all_submissions(self, expected_resp):
-        result = Submission.get_submissions()
-        self.assertEqual(result, expected_resp)
-
-    def assert_get_single_submission_raises_not_found(self, entry_id):
-        exception = exceptions.EntryNotFound
-        err = {'error': f'{entry_id} was not found in submissions'}
-        with self._assert_expected_exception_and_error(exception, err):
-            Submission.get_submission(entry_id)
-
-    def assert_get_single_submission_returns_single(
-            self, expected_resp, entry_id):
-        self.assertEqual(expected_resp, Submission.get_submission(entry_id))
-
-    def assert_create_submission_raises_validation_error(self, data):
-        exception = exceptions.ValidationError
-        with self._assert_expected_exception_and_error(exception):
-            Submission.create_submission(data)
-
-    def assert_create_submission_raises_already_exists(self, entry_id, data):
-        exception = exceptions.EntryAlreadyExists
-        err = {'error': f'{entry_id} already exists in submissions'}
-        with self._assert_expected_exception_and_error(exception, err):
-            Submission.create_submission(data)
-
-    def assert_create_submission_returns_success(self, data):
-        result = Submission.create_submission(data)
-        expected = Submission.from_json(data)
-        self.assertEqual(expected, result)
-
-    def assert_update_submission_raises_not_found(self, entry_id, data):
-        exception = exceptions.EntryNotFound
-        err = {'error': f'{entry_id} was not found in def'}
-        with self._assert_expected_exception_and_error(exception, err):
-            Submission.update_submission(entry_id, data)
-
-    def assert_update_submission_raises_validation_error(self, entry_id, data):
-        exception = exceptions.ValidationError
-        err = {'error': 'Missing: location'}
-        with self._assert_expected_exception_and_error(exception, err):
-            Submission.update_submission(entry_id, data)
-
-    def assert_update_submission_returns_success(
-            self, entry_id, data, expected):
-        self.assertEqual(
-            expected, Submission.update_submission(entry_id, data))
-
-
-class RouteResponseAssertions(unittest.TestCase):
-
-    def _assert_expected_code_and_response(
-            self, method, path, expected_code, expected_response, body=None):
-        with make_test_client() as client:
-            call = getattr(client, method)
-            if method in ['post', 'put']:
-                r = call(path, data=body)
-            else:
-                r = call(path)
-            self.assertEqual(expected_code, r.status)
-            response_body = r.get_json()
-            if expected_response is not None:
-                print(response_body)
-                self.assertEqual(response_body, expected_response)
-            self.assertEqual(
-                "application/json", r.headers["Content-type"])
-
-    def assert_get_raises_ok(self, path, expected_response=None):
-        return self._assert_expected_code_and_response(
-            'get', path, '200 OK', expected_response)
-
-    def assert_get_raises_not_found(self, path, expected_response=None):
-        return self._assert_expected_code_and_response(
-            'get', path, '404 NOT FOUND', expected_response)
-
-    def assert_get_raises_invalid_body(self, path, expected_response=None):
-        return self._assert_expected_code_and_response(
-            'get', path, '400 BAD REQUEST', expected_response)
-
-    def assert_post_raises_ok(self, path, body, expected_response=None):
-        return self._assert_expected_code_and_response(
-            'post', path, '201 CREATED', expected_response, json.dumps(body))
-
-    def assert_post_raises_invalid_body(self, path, expected_response=None):
-        invalid_body = b'FOOBAR'
-        return self._assert_expected_code_and_response(
-            'post', path, '400 BAD REQUEST', expected_response, invalid_body)
-
-    def assert_post_raises_already_exists(
-            self, path, body, expected_response=None):
-        return self._assert_expected_code_and_response(
-            'post', path, '409 CONFLICT', expected_response, json.dumps(body))
-
-    def assert_put_raises_ok(self, path, body, expected_response=None):
-        return self._assert_expected_code_and_response(
-            'put', path, '200 OK', expected_response, json.dumps(body))
-
-    def assert_put_raises_not_found(self, path, body, expected_response=None):
-        return self._assert_expected_code_and_response(
-            'put', path, '404 NOT FOUND', expected_response, json.dumps(body))
-
-    def assert_put_raises_invalid_body(self, path, expected_response=None):
-        invalid_body = b'FOOBAR'
-        return self._assert_expected_code_and_response(
-            'put', path, '400 BAD REQUEST', expected_response, invalid_body)
+from springapi.app import create_app, create_config
+from springapi.config_helpers import (
+    AUTH, KEY, SUBMISSION, TOKEN)
+from springapi.helpers import encode_json_uri
 
 
 def populate_mock_submissions(entries):
-
     mock_db = MockFirestore()
     for key, data in entries.items():
         mock_db.collection('submissions').add(data, key)
@@ -147,9 +17,26 @@ def populate_mock_submissions(entries):
 
 
 @contextlib.contextmanager
-def make_test_client(environ=None):
+def make_test_client(environ=None, skip_defaults=False):
+    auth_credentials = {"web": {"client_id": "abc123"}}
     environ = environ or {}
-    environ.setdefault("DATABASE_URI", encode_json_uri("firestore", {}))
-    app = create_app(environ)
+    if not skip_defaults:
+        environ.setdefault(AUTH, encode_json_uri("google", auth_credentials))
+        environ.setdefault(KEY, "secretkey")
+        environ.setdefault(SUBMISSION, encode_json_uri("firebase", {}))
+        environ.setdefault(TOKEN, encode_json_uri("sqlite", {}))
+    config = create_config(environ)
+    app = create_app(config)
     with app.test_client() as client:
         yield client
+
+
+class MockUid:
+
+    @classmethod
+    def create_mock_uid(cls):
+        return uuid.UUID(int=0)
+
+    @classmethod
+    def get_mock_uid_base32(cls):
+        return "aaaaaaaaaaaaaaaaaaaaaaaaaa"
