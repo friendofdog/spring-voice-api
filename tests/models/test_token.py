@@ -1,8 +1,8 @@
 from springapi.models.token import COLLECTION, Token
-from tests.models.helpers import ResponseAssertions
+from tests.models.helpers import ModelResponseAssertions
 
 
-class TestTokenGetAllTokens(ResponseAssertions):
+class TestTokenGetAllTokens(ModelResponseAssertions):
 
     def test_get_tokens_returns_all_valid_entries(self):
         valid = {"1": {"token": "def456"}}
@@ -15,7 +15,7 @@ class TestTokenGetAllTokens(ResponseAssertions):
             COLLECTION, Token.get_tokens)
 
 
-class TestTokenCreateToken(ResponseAssertions):
+class TestTokenCreateToken(ModelResponseAssertions):
 
     def test_create_token_returns_json_if_data_valid(self):
         data = {"token": "abc123"}

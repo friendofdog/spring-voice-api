@@ -1,8 +1,8 @@
 from springapi.models.submission import COLLECTION, Submission
-from tests.models.helpers import ResponseAssertions
+from tests.models.helpers import ModelResponseAssertions
 
 
-class TestSubmissionGetAllSubmissions(ResponseAssertions):
+class TestSubmissionGetAllSubmissions(ModelResponseAssertions):
 
     def test_get_submissions_returns_all_valid_entries(self):
         valid = {"1": {"name": "a", "message": "b", "location": "c"}}
@@ -15,7 +15,7 @@ class TestSubmissionGetAllSubmissions(ResponseAssertions):
             COLLECTION, Submission.get_submissions)
 
 
-class TestSubmissionGetSingleSubmission(ResponseAssertions):
+class TestSubmissionGetSingleSubmission(ModelResponseAssertions):
 
     def test_get_submission_returns_submission_if_found_and_valid(self):
         entry_id = "1"
@@ -30,7 +30,7 @@ class TestSubmissionGetSingleSubmission(ResponseAssertions):
             COLLECTION, Submission.get_submission, "1")
 
 
-class TestSubmissionCreateSubmission(ResponseAssertions):
+class TestSubmissionCreateSubmission(ModelResponseAssertions):
 
     def test_create_submission_returns_json_if_data_valid(self):
         data = {"name": "a", "location": "b", "message": "c"}
@@ -61,7 +61,7 @@ class TestSubmissionCreateSubmission(ResponseAssertions):
             COLLECTION, Submission.create_submission, data)
 
 
-class TestSubmissionUpdateSubmission(ResponseAssertions):
+class TestSubmissionUpdateSubmission(ModelResponseAssertions):
 
     def test_update_submission_returns_success_if_found_and_valid(self):
         entry_id = "1"
