@@ -162,8 +162,8 @@ class TestSubmissionsRouteGetSingle(RouteResponseAssertions):
             'location': 'There',
             'bad_field': 'not allowed'
         }
-        expected = {'error': 'abc contains data which has failed validation - '
-                             'Not allowed: bad_field'}
+        expected = {
+            'error': 'validation_failure', 'message': 'Not allowed: bad_field'}
         self.assert_get_raises_invalid_body(
             f'/api/v1/submissions/{entry_id}', expected,
             credentials={"Authorization": "Bearer abc"})
@@ -176,18 +176,18 @@ class TestSubmissionsRouteGetSingle(RouteResponseAssertions):
             'name': 'Guy',
             'message': 'Hi'
         }
-        expected = {'error': 'abc contains data which has failed validation - '
-                             'Missing: location'}
+        expected = {
+            'error': 'validation_failure', 'message': 'Missing: location'}
         self.assert_get_raises_invalid_body(
             f'/api/v1/submissions/{entry_id}', expected,
             credentials={"Authorization": "Bearer abc"})
 
 
-@mock.patch('springapi.models.submission.create_uid')
 @mock.patch('springapi.models.firebase.client.add_entry')
 class TestSubmissionsRouteCreate(RouteResponseAssertions):
 
-    def test_create_single_returns_created_on_success(self, mock_add, mock_id):
+    @mock.patch('springapi.models.submission.create_uid')
+    def test_create_single_returns_created_on_success(self, mock_id, mock_add):
         entry_id = mock_id.return_value = 'abc'
         data = {"name": "a", "message": "b", "location": "c"}
         mock_add.return_value = {entry_id: data}
@@ -197,20 +197,21 @@ class TestSubmissionsRouteCreate(RouteResponseAssertions):
         self.assert_post_raises_created('/api/v1/submissions', data, expected)
         mock_add.assert_called_with("submissions", expected)
 
-    def test_create_single_raises_EntryAlreadyExists(self, mock_add, mock_id):
-        mock_id.return_value = 'abc'
+    @mock.patch('springapi.models.submission.create_uid')
+    def test_create_single_raises_EntryAlreadyExists(self, mock_id, mock_add):
+        entry_id = mock_id.return_value = 'abc'
         err = mock_add.side_effect = EntryAlreadyExists(
-            'abc', 'submissions')
+            entry_id, 'submissions')
         body = {"name": "a", "message": "b", "location": "c"}
         self.assert_post_raises_already_exists(
             '/api/v1/submissions', body, err.error_response_body())
 
-    def test_create_single_rejects_invalid_json(self, mock_add, mock_id):
-        mock_id.return_value = 'abc'
-        mock_add.return_value = ''
-        err = ValidationError('Invalid JSON')
+    def test_create_single_rejects_invalid_json(self, mock_add):
+        invalid_body = b"foobar"
+        err = mock_add.side_effect = ValidationError(
+            [[invalid_body, type(invalid_body), "json"]], "type")
         self.assert_post_raises_invalid_body(
-            '/api/v1/submissions', err.error_response_body())
+            '/api/v1/submissions', err.error_response_body(), invalid_body)
 
 
 @mock.patch('springapi.routes.helpers.get_valid_admin_tokens')
@@ -241,7 +242,9 @@ class TestSubmissionsRouteUpdate(RouteResponseAssertions):
     def test_update_single_rejects_invalid_json(self, mocked, auth):
         auth.return_value = MOCK_TOKENS
         entry_id = 'abc'
-        err = ValidationError('Invalid JSON')
+        invalid_body = b"foobar"
+        err = mocked.side_effect = ValidationError(
+            [[invalid_body, type(invalid_body), "json"]], "type")
         self.assert_put_raises_invalid_body(
             f'/api/v1/submissions/{entry_id}', err.error_response_body(),
-            credentials={"Authorization": "Bearer abc"})
+            invalid_body, credentials={"Authorization": "Bearer abc"})

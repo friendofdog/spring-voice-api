@@ -2,8 +2,7 @@ import unittest
 from springapi.utils.authorization import (
     create_api_token, exchange_oauth_token, generate_api_token,
     get_auth_code_uri)
-from springapi.exceptions import (
-    AuthorizationError, AuthProviderResponseError, ValidationError)
+from springapi.exceptions import AuthorizationError, AuthProviderResponseError
 from unittest import mock
 
 
@@ -35,7 +34,7 @@ class TestExchangeOAuthToken(unittest.TestCase):
 
     @mock.patch('springapi.models.email.Email.get_authorized_emails')
     @mock.patch('springapi.utils.authorization.get_authenticated_user_email')
-    def test_exchange_oauth_token_raises_ValidationError_on_bad_email(
+    def test_exchange_oauth_token_raises_AuthorizationError_on_bad_email(
             self, mock_user, mock_email, mock_oauth):
         user_email = mock_user.return_value = "foo@bar.com"
         mock_email.return_value = ["bar@foo.com"]
@@ -112,15 +111,15 @@ class TestCreateApiToken(unittest.TestCase):
         self.assertEqual(str(context.exception), err)
         self.assertFalse(mock_create.called)
 
-    def test_create_api_token_raises_error_if_store_token_fails(
+    def test_create_api_token_raises_AuthorizationError_if_store_token_fails(
             self, mock_exch, mock_gen, mock_create):
         err = "Something invalid"
         mock_exch.return_value = False
         mock_gen.return_value = b"qwerty"
-        mock_create.side_effect = ValidationError(err)
+        mock_create.side_effect = AuthorizationError(err)
 
-        with self.assertRaises(ValidationError) as context:
+        with self.assertRaises(AuthorizationError) as context:
             create_api_token(*self.args)
 
-        self.assertIsInstance(context.exception, ValidationError)
+        self.assertIsInstance(context.exception, AuthorizationError)
         self.assertEqual(str(context.exception), err)

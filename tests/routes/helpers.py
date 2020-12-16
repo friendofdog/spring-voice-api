@@ -105,10 +105,9 @@ class RouteResponseAssertions(unittest.TestCase):
             credentials=credentials)
 
     def assert_post_raises_invalid_body(
-            self, path, expected_response=None, credentials=None):
-        invalid_body = b'FOOBAR'
+            self, path, expected_response, body, credentials=None):
         return self.assert_expected_code_and_response(
-            'post', path, '400 BAD REQUEST', expected_response, invalid_body,
+            'post', path, '400 BAD REQUEST', expected_response, body,
             credentials=credentials)
 
     def assert_post_raises_authorization_error(
@@ -136,8 +135,7 @@ class RouteResponseAssertions(unittest.TestCase):
             credentials=credentials)
 
     def assert_put_raises_invalid_body(
-            self, path, expected_response=None, credentials=None):
-        invalid_body = b'FOOBAR'
+            self, path, expected_response, body, credentials=None):
         return self.assert_expected_code_and_response(
-            'put', path, '400 BAD REQUEST', expected_response, invalid_body,
+            'put', path, '400 BAD REQUEST', expected_response, body,
             credentials=credentials)

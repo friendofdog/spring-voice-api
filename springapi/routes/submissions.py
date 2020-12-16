@@ -1,4 +1,5 @@
 import json
+from springapi.exceptions import ValidationError
 from springapi.config_helpers import VERSION
 from springapi.routes.helpers import make_route, requires_admin
 from springapi.models.submission import Submission
@@ -28,7 +29,8 @@ def create_single(config):
     try:
         request_data = json.loads(request.data)
     except ValueError:
-        return {"error": "Invalid JSON"}, 400
+        raise ValidationError(
+            [[request.data, type(request.data), "json"]], "type")
     return Submission.create_submission(request_data).to_json(), 201
 
 
@@ -38,5 +40,6 @@ def update_single(config, entry_id):
     try:
         request_data = json.loads(request.data)
     except ValueError:
-        return {"error": "Invalid JSON"}, 400
+        raise ValidationError(
+            [[request.data, type(request.data), "json"]], "type")
     return Submission.update_submission(entry_id, request_data), 200

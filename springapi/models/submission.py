@@ -40,10 +40,7 @@ class Submission(ApiObjectModel):
     def get_submission(cls, entry_id: str) -> "ApiObjectModel":
         response = client.get_entry(COLLECTION, entry_id)
         response["id"] = entry_id
-        try:
-            submission = Submission.from_json(response)
-        except ValidationError as err:
-            raise ValueError(err)
+        submission = Submission.from_json(response)
         return submission
 
     @classmethod

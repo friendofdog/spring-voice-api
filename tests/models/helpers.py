@@ -19,17 +19,20 @@ def _create_validation_err_message(message, err_type):
         "message": f"{msg_prefixes[err_type]}{message}"
     }
 
+
 def _create_collection_not_found_err_message(collection):
     return {
         "error": "not_found",
         "message": f"Collection {collection} not found"
     }
 
+
 def _create_entry_not_found_err_message(entry_id, collection):
     return {
         "error": "not_found",
         "message": f'{entry_id} was not found in {collection}'
     }
+
 
 def _create_entry_already_exists_err_message(uid, collection):
     return {

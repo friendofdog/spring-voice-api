@@ -16,7 +16,8 @@ def _validate_user_by_email(token):
     valid_emails = Email.get_authorized_emails()
     user_email = get_authenticated_user_email(token)
     if user_email not in valid_emails:
-        raise ValidationError(user_email)
+        raise AuthorizationError(
+            f"User associated with {user_email} is not authorized")
     return user_email
 
 
@@ -28,8 +29,7 @@ def exchange_oauth_token(auth_code, credentials, redirect_host):
     try:
         email = _validate_user_by_email(token)
     except ValidationError as e:
-        raise AuthorizationError(
-            f"User associated with {e} is not authorized")
+        raise AuthorizationError(f"User associated with {e} is not authorized")
     return email
 
 
