@@ -4,7 +4,7 @@ import unittest
 
 from springapi.utils.google.client import (
     create_auth_request_uri, get_oauth_token, get_authenticated_user_email,
-    AuthProviderResponseError, ValidationError)
+    AuthProviderResponseError)
 from unittest import mock
 
 
@@ -51,14 +51,6 @@ class TestGoogleToken(unittest.TestCase):
         self.assertEqual(
             str(context.exception),
             f"Error retrieving token from {token_url}")
-
-    def test_exchange_auth_token_raises_ValidationError_bad_credentials(
-            self, mock_post):
-        mock_post.return_value.content = b'{"error": "bad response"}'
-        with self.assertRaises(ValidationError) as context:
-            get_oauth_token(
-                "https://example.com", {"web": {"bad": "creds"}}, "12345")
-        self.assertEqual(str(context.exception), "Bad credentials")
 
 
 @mock.patch.object(requests, "get")

@@ -2,7 +2,7 @@ import json
 import requests
 import urllib
 
-from springapi.exceptions import AuthProviderResponseError, ValidationError
+from springapi.exceptions import AuthProviderResponseError
 from springapi.config_helpers import VERSION
 
 
@@ -26,11 +26,8 @@ def create_auth_request_uri(
 def get_oauth_token(
         auth_code, credentials, redirect_host,
         token_url="https://oauth2.googleapis.com/token"):
-    try:
-        client_id = credentials["web"]["client_id"]
-        client_secret = credentials["web"]["client_secret"]
-    except KeyError:
-        raise ValidationError("Bad credentials")
+    client_id = credentials["web"]["client_id"]
+    client_secret = credentials["web"]["client_secret"]
 
     data = {
         "code": auth_code["code"],

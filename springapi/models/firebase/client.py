@@ -40,7 +40,7 @@ def add_entry(collection, data):
     client = firestore.client()
     entry_id = data.pop('id', None)
     if entry_id is None:
-        raise ValidationError('Entry ID missing')
+        raise ValidationError(["id"], "missing")
     try:
         __, response = client.collection(collection).add(data, entry_id)
         added = {response.get().id: response.get().to_dict()}
