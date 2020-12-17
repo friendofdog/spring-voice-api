@@ -1,0 +1,49 @@
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: spring-voice-api
+  namespace: springvoice
+  labels:
+    role: api
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      role: api
+  template:
+    metadata:
+      labels:
+        role: api
+      namespace: springvoice
+    spec:
+      containers:
+      - name: spring-voice-api
+        image: springapi:latest
+        ports:
+        - name: api
+          containerPort: 5000
+        livenessProbe:
+          httpGet:
+            path: /api/v1/healthcheck
+            port: api
+        env:
+        - name: AUTH
+          valueFrom:
+            secretKeyRef:
+              name: springapi-secrets
+              key: auth-uri
+        - name: SUBMISSION
+          valueFrom:
+            secretKeyRef:
+              name: springapi-secrets
+              key: submission-uri
+        - name: TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: springapi-secrets
+              key: token-uri
+        - name: KEY
+          valueFrom:
+            secretKeyRef:
+              name: springapi-secrets
+              key: key

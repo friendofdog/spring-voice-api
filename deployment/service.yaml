@@ -1,0 +1,15 @@
+kind: Service
+apiVersion: v1
+metadata:
+  name: spring-voice-api
+  namespace: springvoice
+  labels:
+    role: api
+spec:
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 5000
+  selector:
+    role: api
+  type: LoadBalancer
