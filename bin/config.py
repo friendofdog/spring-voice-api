@@ -7,7 +7,7 @@ def create_config_filepath():
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "config_filepath", help="Path to the JSON configuration file")
-    parser.add_argument("--protocol", default="firestore")
+    parser.add_argument("--protocol", default="firebase")
     parsed = parser.parse_args()
 
     with open(parsed.config_filepath, "rb") as fp:
