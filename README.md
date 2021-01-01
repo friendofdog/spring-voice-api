@@ -10,30 +10,60 @@ Requirements
 - Access to the Spring Voice application on Firebase
 - Your own Firebase app for development
 
+CI/CD
+-----
+
+Continuous integration / continuous delivery is managed by a [Gitlab's CI/CD](https://docs.gitlab.com/ee/ci/). See `.gitlab-ci.yml` for details. 
+
+The following are what happens in CI/CD:
+
+1. A branch is merged into `primary`, triggering the runner. Two pipelines will be run: test and build.
+
+2. Provided all pipelines succeed, the runner will proceed to push built image to AWS ECR. This depends on a number of environment variables, which are [managed by Gitlab](https://docs.gitlab.com/ee/ci/variables/README.html).
+
+3. AWS ECR is the Docker image repository. The image will be stored here with two tags: `latest` (for last pushed image), and `branch-commit_sha-job_id`.
+
+4. (Incomplete) The plan is to deploy on Kubernetes using AWS EKS. As of now (2020-12-31), the Deployment and Service YML files needed have been created and tested locally. They work on minikube.
+
 Using this Application
 ----------------------
 
-### Setup
+### Configuring external dependencies
 
-1. Optional: Set up and activate a virtual environment, like venv or pyenv.
-2. Install dependencies: `pip install -r dependencies.txt`.
-3. Install dev dependencies: `pip install -r dependencies-dev.txt`.
-4. Acquire service account keys from Google and put it somewhere that can be accessed by this app.*
-5. Configure [environment variables](#environment-variables).
+The API has three external dependencies: an OAuth provider, a database for submissions, and a database for user tokens. At the time of writing (2020-12-31), the first is Google OAuth; the latter two are both Google Firebase. As such, the following are required:
 
-\* See [Google Cloud documentation](https://cloud.google.com/iam/docs/creating-managing-service-account-keys) for instructions. There is a sample key in this repo, `sample-config.json`.
+- Google OAuth client ID *
+- Google service account key **
 
-#### Environment variables
+\* See [Using OAuth 2.0 to Access Google APIs](https://developers.google.com/identity/protocols/oauth2) for instructions. Be sure that `redirect_uris` and `javascript_origins` include relevant domains for the API. There is a sample in this repo, `sample-oauth-id.json`.
+\** See [Google Cloud documentation](https://cloud.google.com/iam/docs/creating-managing-service-account-keys) for instructions. There is a sample key in this repo, `sample-service-account.json`.
 
-There are three environment variables which govern how the app runs:
+See [environment variables](#environment-variables) on how to implement these.
 
-1. `ENV`: `development`, `production`, `testing`. Defaults to `testing` if not set.
-2. `DEBUG`: `True` or `False`. Defaults to `True` in development, otherwise `False`.
-3. `DATABASE_URI`: Determines the scheme and configuration for the database. The value should be the path to the aforementioned Google Cloud service account key.
+### Installation
+
+1. Optional, for development: Set up and activate a virtual environment, like venv or pyenv
+2. Install dependencies: `pip install -r dependencies.txt`
+3. Install dev dependencies: `pip install -r dependencies-dev.txt`
+4. Configure [environment variables](#environment-variables)
+
+### Configure environment variables
+
+There are three environment variables which govern how the app runs. The following are mandatory:
+
+1. `AUTH`: Protocol and config file for OAuth provider
+2. `KEY`: The secret key for token creation (see [PyJWT](https://pyjwt.readthedocs.io/en/stable/usage.html) for explanation)
+3. `SUBMISSION`: Protocol and config file for submissions database
+4. `TOKEN`: Protocol and config file for token database
+
+The following are optional, as they have default:
+
+5. `ENV`: Runtime environment - `development`, `production`, or `testing`; defaults to `testing` if not set
+6. `DEBUG`: Debug mode - `True` or `False`; defaults to `True` in development, otherwise `False`
 
 ### Starting in development mode
 
-`make run CONFIG=path-to-config` will start the app in development mode. `path-to-config` is wherever you put the Google Cloud service account key.
+`make run AUTH=path-to-oauth-id KEY=abc123 SUBMISSION=path-to-service-account TOKEN=path-to-service-account` will start the app in development mode. `path-to-oauth-id` is location of Google OAuth client ID and `path-to-service-account` location of Google Cloud service account key.
 
 Once started, you can send HTTP requests to `http://localhost:5000/api/v1/<route>` using curl or a client like Postman. Note that if you've set up Firebase correctly, you are making requests to live resources.
 
@@ -211,11 +241,3 @@ Return:
     "expires_in": int
 }
 ```
-
-Internal Resources
-------------------
-
-- Database table for Submissions
-- Image storage location
-- Database table for Users / Devices
-- Database table for Tokens

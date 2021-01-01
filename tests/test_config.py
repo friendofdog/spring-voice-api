@@ -20,7 +20,7 @@ class TestSpringapiConfig(unittest.TestCase):
 
     @mock.patch('argparse.ArgumentParser.parse_args')
     def test_create_config_filepath_reads_file(self, mock_args):
-        file = 'sample-config.json'
+        file = 'sample-service-account.json'
         schema = 'abc'
         mock_args.return_value = argparse.Namespace(
             config_filepath=file, protocol=schema)
