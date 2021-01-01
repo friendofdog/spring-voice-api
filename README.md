@@ -10,10 +10,20 @@ Requirements
 - Access to the Spring Voice application on Firebase
 - Your own Firebase app for development
 
-Deployment
-----------
+CI/CD
+-----
 
-[describe how API is deployed on K8s from a Docker image which is updated by Gitlab CD]
+Continuous integration / continuous delivery is managed by a [Gitlab's CI/CD](https://docs.gitlab.com/ee/ci/). See `.gitlab-ci.yml` for details. 
+
+The following are what happens in CI/CD:
+
+1. A branch is merged into `primary`, triggering the runner. Two pipelines will be run: test and build.
+
+2. Provided all pipelines succeed, the runner will proceed to push built image to AWS ECR. This depends on a number of environment variables, which are [managed by Gitlab](https://docs.gitlab.com/ee/ci/variables/README.html).
+
+3. AWS ECR is the Docker image repository. The image will be stored here with two tags: `latest` (for last pushed image), and `branch-commit_sha-job_id`.
+
+4. (Incomplete) The plan is to deploy on Kubernetes using AWS EKS. As of now (2020-12-31), the Deployment and Service YML files needed have been created and tested locally. They work on minikube.
 
 Using this Application
 ----------------------
